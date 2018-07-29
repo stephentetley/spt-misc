@@ -1,8 +1,8 @@
 % queries_rts.pl
 
-:- use_module(facts/rts_picture_names).
+:- use_module(facts/rts_mimic_names).
+:- use_module(facts/rts_mimic_points).
 :- use_module(facts/rts_asset_to_signal).
-:- use_module(facts/rts_picture_facts).
 :- use_module(facts/rts_pump_facts).
 :- use_module(facts/rts_screen_facts).
 :- use_module(utils).
@@ -13,19 +13,20 @@
 
 
 
-picture_long_name(OS, Point, Name) :- 
-    rts_picture(P, OS, Point),
-    rts_picture_name(P,Name).
+mimic_long_name(OS, Point, Name) :- 
+    rts_mimic_point(P, OS, Point),
+    rts_mimic_name(P,Name).
 
 % picture_long_name( 'CHERRY_BURTON_STW', 'RBC_NO1_DRIVE_P', X).
 
-all_pictures(Os, Pictures) :- 
-    findall(X, rts_picture(X,Os,_), Xs),
+all_mimics(Os, Pictures) :- 
+    findall(X, rts_mimic_point(X, Os, _), Xs),
     sort(Xs,Pictures).
 
 
-all_picture_names(Xs) :-
-    findall(Y, rts_picture_name(_,Y), Xs).
+all_mimic_names(Mimics) :-
+    findall(Y, rts_mimic_name(_,Y), Xs),
+    sort(Xs,Mimics).
 
 
 
@@ -68,10 +69,11 @@ has_standard_signals_(Sigs) :- match_raf_(Sigs).
 
 
 
-% Screens
+% Pumps
 
-all_pumps(Os, Xs) :- 
-    findall(X, rts_pump(Os,X,_), Xs).
+all_pumps(Os, Pumps) :- 
+    findall(X, rts_pump(Os,X,_), Xs), 
+    sort(Xs,Pumps).
 
 
 has_standard_pump_signals(Os, Point) :-   
@@ -97,9 +99,9 @@ pumps_with_nonstandard_signals(Os, Xs) :-
 % pumps_with_nonstandard_signals('CHERRY_BURTON_STW', Xs).
 
 % Screens  
-% This is not nondeterministic, which is an error.  
 all_screens(Os, Screens) :- 
-    findall(S, rts_screen(Os, S, _), Screens).
+    findall(S, rts_screen(Os, S, _), Screens1),
+    sort(Screens1, Screens).
 
 % all_screens('THORNTON_DALE_STW', Xs).
 
@@ -111,7 +113,7 @@ has_standard_screen_signals(Os, Point) :-
 % Os must be ground.
 screens_with_standard_signals(Os, Screens) :- 
     all_screens(Os, Names),
-    include(has_standard_screen_signals(Os),Names,Screens).
+    include(has_standard_screen_signals(Os), Names, Screens).
 
 % Os must be ground.
 screens_with_nonstandard_signals(Os, Screens) :- 
@@ -121,25 +123,34 @@ screens_with_nonstandard_signals(Os, Screens) :-
 % screens_with_nonstandard_signals('THORNTON_DALE_STW', Ys).
 
 screen_points(Os, Screen, Points) :-
-    findall(X, asset_to_signal(Os,Screen,X,_), Points).
+    findall(X, asset_to_signal(Os,Screen,X,_), Xs),
+    sort(Xs,Points).
 
 % screen_points('THORNTON_DALE_STW', 'INLET_SCREEN_MACI_PUMP', Points).
 
-get_picture_(Os, Point, Picture) :- 
-    rts_picture(Picture, Os, Point).
+get_mimic_(Os, Point, Mimic) :- 
+    rts_mimic_point(Mimic, Os, Point).
 
-screen_to_picture(Os, Screen, Pictures) :- 
+screen_to_mimic_(Os, Screen, Mimic) :- 
     screen_points(Os, Screen, Points),
-    convlist(get_picture_(Os), Points, Pictures).
+    convlist(get_mimic_(Os), Points, Mimics),
+    all_same(Mimics, Mimic).
 
-% screen_to_picture('THORNTON_DALE_STW', 'INLET_SCREEN_MACI_PUMP', Picture).
+mimic_to_screen_(Os, Mimic, Screen) :- 
+    screen_to_mimic_(Os, Screen, Mimic).
 
-% grouped_screens_(Os,X) :- 
-%     all_screens(Os,ScreenNames),
-%     findall(X, all_same(ScreenNames).
+% screen_to_mimic('THORNTON_DALE_STW', 'INLET_SCREEN_MACI_PUMP', Mimic).
 
-% grouped_screens_('THORNTON_DALE_STW', Xs).
-% grouped_screens(Os,Groups) :- 
-%     all_screens(Os,ScreenNames), 
-%     singleton(ScreenNames,)
-%     % rts_picture('CHERRY_BURTON_STW_0', 'CHERRY_BURTON_STW', 'TELEMETRY_DATA_0_TO_31').
+join_mimic_to_screens_(Os, Mimic, Screens) :- 
+    all_screens(Os, Screens1),
+    include(mimic_to_screen_(Os, Mimic), Screens1, Screens).
+
+% join_mimic_to_screens_('THORNTON_DALE_STW', 'THORNTON_DALE_STW_1', X).
+
+screen_signals(Os, Results) :- 
+    all_mimics(Os,Mimics),
+    convlist([Mimic,Ans] >> (join_mimic_to_screens_(Os, Mimic, Screens), Ans = (Mimic,Screens)), Mimics, Results).
+
+
+% screen_signals('THORNTON_DALE_STW', Xs).
+
