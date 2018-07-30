@@ -4,6 +4,8 @@ License: BSD 3 Clause
 */
 
 
+:- use_module(library(csv)).
+
 :- use_module(facts/rts_mimic_names).
 :- use_module(facts/rts_mimic_points).
 :- use_module(facts/rts_asset_to_signal).
@@ -153,10 +155,11 @@ join_mimic_to_screens_(Os, Mimic, Screens) :-
 
 screen_signals(Os, Results) :- 
     all_mimics(Os,Mimics),
-    convlist([Mimic,Ans] >> (join_mimic_to_screens_(Os, Mimic, Screens),
-                            rts_mimic_name(Mimic, Name),  
-                            Ans = (Name,Screens)), 
-                    Mimics, Results1),
+    convlist({Os}/[Mimic,Ans] >> 
+                (join_mimic_to_screens_(Os, Mimic, Screens),
+                    rts_mimic_name(Mimic, Name),  
+                    Ans = (Name,Screens)), 
+                Mimics, Results1),
     include(tuple_with_points_, Results1, Results).
 
 
@@ -168,12 +171,28 @@ join_mimic_to_pumps_(Os, Mimic, Pumps) :-
 
 pump_signals(Os, Results) :- 
     all_mimics(Os,Mimics),
-    convlist([Mimic,Ans] >> (join_mimic_to_pumps_(Os, Mimic, Pumps), 
+    convlist({Os}/[Mimic,Ans] >> (join_mimic_to_pumps_(Os, Mimic, Pumps), 
                             rts_mimic_name(Mimic, Name), 
                             Ans = (Name, Pumps)), 
                 Mimics, Results1),
     include(tuple_with_points_, Results1, Results).
 
+% pump_signals('THORNTON_DALE_STW', Xs).
+
 tuple_with_points_((_,[_|_])) :- true.
 
+term_element_to_row_(Os, Name, Assets, Rows) :- 
+    convlist({Os,Name}/[Asset, Row] >> (Row = row(Os, Name, Asset)), 
+                Assets, Rows).
+
+pump_signals_rows(Os, Rows) :- 
+    pump_signals(Os,Tree),
+    convlist({Os}/[(Name,Assets), Rows1] >> term_element_to_row_(Os,Name,Assets,Rows1), Tree, RowsRows),
+    append(RowsRows, Rows).
+
+% pump_signals_rows('THORNTON_DALE_STW', Xs).
+
+temp_csv :- 
+    pump_signals_rows('THORNTON_DALE_STW', Rows),
+    csv_write_file("output/temp02.csv", Rows).
 
