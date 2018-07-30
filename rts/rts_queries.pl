@@ -6,6 +6,7 @@ License: BSD 3 Clause
 
 :- use_module(library(csv)).
 
+:- use_module(facts/rts_outstations).
 :- use_module(facts/rts_mimic_names).
 :- use_module(facts/rts_mimic_points).
 :- use_module(facts/rts_asset_to_signal).
@@ -17,7 +18,9 @@ License: BSD 3 Clause
  * Comment
 */
 
-
+all_outstations(Oustations) :- 
+    findall(X, rts_outstation(X), List1),
+    sort(List1,Oustations).
 
 mimic_long_name(OS, Point, Name) :- 
     rts_mimic_point(P, OS, Point),
@@ -163,6 +166,12 @@ screen_signals(Os, Results) :-
     include(tuple_with_points_, Results1, Results).
 
 
+screen_signals_rows(Os, Rows) :- 
+    screen_signals(Os,Tree),
+    convlist({Os}/[(Name,Assets), Rows1] >> term_element_to_row_(Os,Name,Assets,Rows1), Tree, RowsRows),
+    append(RowsRows, Rows).
+
+
 % screen_signals('THORNTON_DALE_STW', Xs).
 
 join_mimic_to_pumps_(Os, Mimic, Pumps) :- 
@@ -196,3 +205,24 @@ temp_csv :-
     pump_signals_rows('THORNTON_DALE_STW', Rows),
     csv_write_file("output/temp02.csv", Rows).
 
+report1 :- 
+    all_outstations(Outstations),
+    setup_call_cleanup(
+        open("output/pump-signals.csv", write, Out),
+            (csv_write_stream(Out, [row("Os Name", "Mimic Title", "Pump Signal Group")], []),
+                forall(member(Os,Outstations), 
+                        (pump_signals_rows(Os,Rows), 
+                         csv_write_stream(Out, Rows, [])))),
+        close(Out)).
+
+report2 :- 
+    all_outstations(Outstations),
+    setup_call_cleanup(
+        open("output/screen-signals.csv", write, Out),
+            (csv_write_stream(Out, [row("Os Name", "Mimic Title", "Screen Signal Group")], []),
+                forall(member(Os,Outstations), 
+                        (screen_signals_rows(Os,Rows), 
+                            csv_write_stream(Out, Rows, [])))),
+        close(Out)).
+        
+        
