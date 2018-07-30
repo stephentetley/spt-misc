@@ -1,11 +1,15 @@
-% utils.pl
+/* 
+Copyright (c) Stephen Tetley 2018
+License: BSD 3 Clause
+*/
 
 
 :- module(utils,
-          [all_same/2]).
+        [ all_same/2
+        ]).
 
 
-% singleton is a bad name, all_same is a bit better.
+% all_same is not the best name, but...
 
 % Don't define the empty case then Prolog will throw an error.
 % all_same([]).

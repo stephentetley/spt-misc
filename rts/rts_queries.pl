@@ -1,4 +1,8 @@
-% queries_rts.pl
+/* 
+Copyright (c) Stephen Tetley 2018
+License: BSD 3 Clause
+*/
+
 
 :- use_module(facts/rts_mimic_names).
 :- use_module(facts/rts_mimic_points).
@@ -122,8 +126,8 @@ screens_with_nonstandard_signals(Os, Screens) :-
 
 % screens_with_nonstandard_signals('THORNTON_DALE_STW', Ys).
 
-screen_points(Os, Screen, Points) :-
-    findall(X, asset_to_signal(Os,Screen,X,_), Xs),
+asset_points(Os, Asset, Points) :-
+    findall(X, asset_to_signal(Os, Asset, X, _), Xs),
     sort(Xs,Points).
 
 % screen_points('THORNTON_DALE_STW', 'INLET_SCREEN_MACI_PUMP', Points).
@@ -131,26 +135,45 @@ screen_points(Os, Screen, Points) :-
 get_mimic_(Os, Point, Mimic) :- 
     rts_mimic_point(Mimic, Os, Point).
 
-screen_to_mimic_(Os, Screen, Mimic) :- 
-    screen_points(Os, Screen, Points),
+asset_to_mimic_(Os, Screen, Mimic) :- 
+    asset_points(Os, Screen, Points),
     convlist(get_mimic_(Os), Points, Mimics),
     all_same(Mimics, Mimic).
 
-mimic_to_screen_(Os, Mimic, Screen) :- 
-    screen_to_mimic_(Os, Screen, Mimic).
+mimic_to_asset_(Os, Mimic, Screen) :- 
+    asset_to_mimic_(Os, Screen, Mimic).
 
 % screen_to_mimic('THORNTON_DALE_STW', 'INLET_SCREEN_MACI_PUMP', Mimic).
 
 join_mimic_to_screens_(Os, Mimic, Screens) :- 
     all_screens(Os, Screens1),
-    include(mimic_to_screen_(Os, Mimic), Screens1, Screens).
+    include(mimic_to_asset_(Os, Mimic), Screens1, Screens).
 
 % join_mimic_to_screens_('THORNTON_DALE_STW', 'THORNTON_DALE_STW_1', X).
 
 screen_signals(Os, Results) :- 
     all_mimics(Os,Mimics),
-    convlist([Mimic,Ans] >> (join_mimic_to_screens_(Os, Mimic, Screens), Ans = (Mimic,Screens)), Mimics, Results).
+    convlist([Mimic,Ans] >> (join_mimic_to_screens_(Os, Mimic, Screens),
+                            rts_mimic_name(Mimic, Name),  
+                            Ans = (Name,Screens)), 
+                    Mimics, Results1),
+    include(tuple_with_points_, Results1, Results).
 
 
 % screen_signals('THORNTON_DALE_STW', Xs).
+
+join_mimic_to_pumps_(Os, Mimic, Pumps) :- 
+    all_pumps(Os, Pumps1),
+    include(mimic_to_asset_(Os, Mimic), Pumps1, Pumps).
+
+pump_signals(Os, Results) :- 
+    all_mimics(Os,Mimics),
+    convlist([Mimic,Ans] >> (join_mimic_to_pumps_(Os, Mimic, Pumps), 
+                            rts_mimic_name(Mimic, Name), 
+                            Ans = (Name, Pumps)), 
+                Mimics, Results1),
+    include(tuple_with_points_, Results1, Results).
+
+tuple_with_points_((_,[_|_])) :- true.
+
 
