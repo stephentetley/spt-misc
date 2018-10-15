@@ -3,9 +3,7 @@
 :- use_module(library(csv)).
 :- use_module(library(apply)).
 
-:- use_module(facts/hawkeyes).
-:- use_module(facts/site_work).
-:- use_module(facts/csos).
+:- use_module(facts/fact_db).
 
 is_phase_two(Sai) :- 
     hawkeye_remaining(Sai, _, _).

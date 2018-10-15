@@ -4,7 +4,7 @@
 :- use_module(library(apply)).
 
 :- use_module(common).
-:- use_module(facts/adb_outstations).
+:- use_module(facts/fact_db).
 
 
 all_sites(Sites) :- 

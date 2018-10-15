@@ -4,7 +4,7 @@
 % from the generated facts database.
 
 :- module(fact_db, []).
-:- reexport([ facts/sensors
-            , facts/relays
-            , facts/level_monitors
+:- reexport([ facts/csos
+            , facts/hawkeyes
+            , facts/site_work
             ]).

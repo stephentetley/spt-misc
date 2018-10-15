@@ -4,9 +4,7 @@
 :- use_module(library(apply)).
 
 :- use_module(common).
-:- use_module(facts/adb_outstations).
-:- use_module(facts/adb_sites).
-:- use_module(facts/rts_outstations).
+:- use_module(facts/fact_db).
 
 os_count(Uid, Count) :-
     findall(X, rts_outstation(Uid,X,_), Xs),

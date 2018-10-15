@@ -29,9 +29,14 @@ demo02b :-
 % Note - one error of configs is fixed relays (e.g. 'TRANSDUCER CABLE FAULT ALARM') 
 % configured to have set points.
 
+/*
 demo03 :- 
-    findall(X, fixed_relay(_, _, X), List),
-    list_to_ord_set(List, Xs),
+    findall(X, fixed_relay(_, _, X), Xs),
+    list_to_ord_set(Xs, Ls1),
+    findall(Y, active_relay(_, _, Y, _, _), Ys),
+    list_to_ord_set(Ys, Ls2),
+*/
+    
 
 
 
