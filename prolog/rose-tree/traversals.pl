@@ -11,6 +11,11 @@
             , one_rewrite/3
             , alltd_rewrite/3
             , alltd_transform/4
+            , allbu_rewrite/3
+            , allbu_transform/4
+            , anytd_rewrite/3
+            , onetd_rewrite/3
+            , onetd_transform/4
             ]).
 
 :- use_module(structs).
@@ -22,7 +27,12 @@
     any_rewrite(2,+,-),
     one_rewrite(2,+,-),
     alltd_rewrite(2,+,-),
-    alltd_transform(3,+,+,-).  
+    anytd_rewrite(2,+,-),
+    onetd_rewrite(2,+,-),
+    alltd_transform(3,+,+,-),
+    allbu_rewrite(2,+,-),
+    allbu_transform(3,+,+,-), 
+    onetd_transform(3,+,+,-).  
 
 
 % So-called congruence combinators
@@ -73,16 +83,50 @@ one_transform(T1, Input, Acc, Ans) :-
     one_transform_list(T1, Kids, Acc, Ans).
 
 
-alltd_rewrite(Goal1, Tree, Ans) :-
-    apply_rewrite(Goal1, Tree, A1),
+alltd_rewrite(R1, Input, Ans) :-
+    apply_rewrite(R1, Input, A1),
     A1 = rose_tree(Label1, Kids1),
-    all_rewrite_list(alltd_rewrite(Goal1), Kids1, Kids2),
+    all_rewrite_list(alltd_rewrite(R1), Kids1, Kids2),
     cons_rose_tree(Label1, Kids2, Ans).
     
 
 
-alltd_transform(Goal1, Tree, Acc, Ans) :-
-    apply_transform(Goal1, Tree, Acc, Acc1),
-    Tree = rose_tree(_, Kids1),
-    all_transform_list(alltd_transform(Goal1), Kids1, Acc1, Ans).
+anytd_rewrite(Goal1, Tree, Ans) :-
+    (apply_rewrite(Goal1, Tree, A0) -> Ans1 = A0; Ans1 = Tree),
+    Ans1 = rose_tree(Label1, Kids1),
+    any_rewrite_list(anytd_rewrite(Goal1), Kids1, Kids2),
+    cons_rose_tree(Label1, Kids2, Ans).
+
+
+onetd_rewrite(Goal1, Input, Ans) :-
+    (apply_rewrite(Goal1, Input, A0) -> 
+        Ans = A0
+    ;   Input = rose_tree(Label1, Kids1),
+        one_rewrite_list(onetd_rewrite(Goal1), Kids1, Kids2),
+        cons_rose_tree(Label1, Kids2, Ans)).
+
+
+alltd_transform(T1, Input, Acc, Ans) :-
+    apply_transform(T1, Input, Acc, Acc1),
+    Input = rose_tree(_, Kids1),
+    all_transform_list(alltd_transform(T1), Kids1, Acc1, Ans).
     
+
+allbu_rewrite(Goal1, Tree, Ans) :-
+    A1 = rose_tree(Label1, Kids1),
+    all_rewrite_list(alltd_rewrite(Goal1), Kids1, Kids2),
+    apply_rewrite(Goal1, Tree, A1),
+    cons_rose_tree(Label1, Kids2, Ans).    
+
+allbu_transform(Goal1, Tree, Acc, Ans) :-
+    Tree = rose_tree(_, Kids1),
+    all_transform_list(allbu_transform(Goal1), Kids1, Acc, Acc1),
+    apply_transform(Goal1, Tree, Acc1, Ans).
+    
+onetd_transform(T1, Input, Acc, Ans) :-
+    (apply_transform(T1, Input, Acc, A0) -> 
+        Ans = A0
+    ;   Input = rose_tree(_, Kids1),
+        one_transform_list(onetd_transform(T1), Kids1, Acc, Ans)).
+
+

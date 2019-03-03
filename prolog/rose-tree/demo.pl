@@ -102,3 +102,27 @@ sum_trafo(A, Acc, Ans) :-
 demo06(Ans) :- 
     tree1(Body),
     alltd_transform(sum_trafo, Body, 0, Ans).
+
+count_trafo(A, Acc, Ans) :- 
+    format(string(Debug), "count_trafo: seen ~w", A),
+    writeln(Debug),
+    A = rose_tree(_,_),
+    integer(Acc),
+    Ans is Acc + 1.
+
+% Note allbu is not (currently?) strictly "backwards"
+demo07(Ans) :- 
+    tree1(Body),
+    allbu_transform(count_trafo, Body, 0, Ans).
+
+demo08(Ans) :- 
+    tree1(Body),
+    anytd_rewrite(add1_rewrite, Body, Ans).
+
+demo09(Ans) :- 
+    tree1(Body),
+    onetd_rewrite(add1_rewrite, Body, Ans).
+
+demo10(Ans) :- 
+    tree1(Body),
+    onetd_transform(count_trafo, Body, 0, Ans).
