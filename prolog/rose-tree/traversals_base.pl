@@ -15,7 +15,9 @@
             , all_rewrite_list/3
             , all_transform_list/4
             , any_rewrite_list/3
+            , any_transform_list/4
             , one_rewrite_list/3
+            , one_transform_list/4
             , const_transform/3
             ]).
 
@@ -26,9 +28,11 @@
         sequence_rewrite(2,2,+,-),
         sequence_transform(3,3,+,+,-),
         all_rewrite_list(2,+,-), 
-        all_transform_list(2,+,+,-), 
+        all_transform_list(3,+,+,-), 
         any_rewrite_list(2,+,-),
-        one_rewrite_list(2,+,-).
+        any_transform_list(3,+,+,-),
+        one_rewrite_list(2,+,-),
+        one_transform_list(3,+,+,-).
 
 %! id_rewrite(Input, Ans)
 % 
@@ -107,6 +111,28 @@ any_rewrite_list_aux([], _, Acc, Ans) :-
 any_rewrite_list_aux([X|Xs], Goal1, Acc, Ans) :-
     (apply_rewrite(Goal1, X, X0) -> X1 = X0; X1 = X),
     any_rewrite_list_aux(Xs, Goal1, [X1|Acc], Ans).
+
+% Transform any elements in a list.
+any_transform_list(Goal1, Input, Acc, Ans) :-
+    any_transform_list_aux(Input, Goal1, Acc, Ans).
+
+any_transform_list_aux([], _, Ans, Ans).
+
+any_transform_list_aux([X|Xs], Goal1, Acc, Ans) :-
+    (apply_transform(Goal1, X, Acc, A0) -> Acc1 = A0; Acc1 = Acc),
+    any_transform_list_aux(Xs, Goal1, Acc1, Ans).
+
+% Transform one elements in a list.
+one_transform_list(Goal1, Input, Acc, Ans) :-
+    any_transform_list_aux(Input, Goal1, Acc, Ans).
+
+one_transform_list_aux([], _, _, _) :- false.
+
+one_transform_list_aux([X|Xs], Goal1, Acc, Ans) :-
+    (apply_transform(Goal1, X, Acc, A0) -> 
+        Ans = A0; 
+        one_transform_list_aux(Xs, Goal1, Acc, Ans)).
+
 
 
 % Rewrite one element, fail if none succeed.

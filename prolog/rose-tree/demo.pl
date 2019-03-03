@@ -9,6 +9,23 @@
 :- use_module(traversals_base).
 :- use_module(traversals).
 
+:- use_module(library(apply)).
+
+% 
+% prelude, what is the arg order of foldl?
+% answer: x -> acc -> acc
+
+accum(Int, AccString, Ans) :-
+    format(string(S1), "+~d", Int),
+    string_concat(AccString, S1, Ans).
+
+test_foldl(Ans) :- 
+    foldl(accum,[1,2,3,4,5],"[]", Ans).
+
+%
+% End prelude
+
+
 
 tree1(rose_tree(1,[ rose_tree(2,[ rose_tree(4,[])
                                 , rose_tree(5,[])])
@@ -73,3 +90,15 @@ demo04b(Ans) :-
 demo05(Ans) :- 
     tree1(Body),
     alltd_rewrite(add1_rewrite, Body, Ans).
+
+% Note - Prolog's argument order for fold is `step`.
+% step : x -> acc -> acc
+sum_trafo(A, Acc, Ans) :- 
+    A = rose_tree(X,_),
+    integer(X), 
+    integer(Acc),
+    Ans is Acc + X.
+
+demo06(Ans) :- 
+    tree1(Body),
+    alltd_transform(sum_trafo, Body, 0, Ans).
