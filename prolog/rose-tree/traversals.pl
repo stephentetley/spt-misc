@@ -114,13 +114,15 @@ alltd_transform(T1, Input, Acc, Ans) :-
 
 allbu_rewrite(Goal1, Tree, Ans) :-
     A1 = rose_tree(Label1, Kids1),
-    all_rewrite_list(alltd_rewrite(Goal1), Kids1, Kids2),
+    reverse(Kids1, Revlist),
+    all_rewrite_list(alltd_rewrite(Goal1), Revlist, Kids2),
     apply_rewrite(Goal1, Tree, A1),
     cons_rose_tree(Label1, Kids2, Ans).    
 
 allbu_transform(Goal1, Tree, Acc, Ans) :-
     Tree = rose_tree(_, Kids1),
-    all_transform_list(allbu_transform(Goal1), Kids1, Acc, Acc1),
+    reverse(Kids1, Revlist),
+    all_transform_list(allbu_transform(Goal1), Revlist, Acc, Acc1),
     apply_transform(Goal1, Tree, Acc1, Ans).
     
 onetd_transform(T1, Input, Acc, Ans) :-

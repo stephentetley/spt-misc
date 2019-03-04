@@ -100,6 +100,7 @@ all_transform_list_aux([X|Xs], Goal1, Acc, Ans) :-
     apply_transform(Goal1, X, Acc, Acc1),
     all_transform_list_aux(Xs, Goal1, Acc1, Ans).
 
+
 % Rewrite any elements in a list where the rewrite succeeds.
 any_rewrite_list(Goal1, Input, Ans) :-
     any_rewrite_list_aux(Input, Goal1, [], Ans).
@@ -124,7 +125,7 @@ any_transform_list_aux([X|Xs], Goal1, Acc, Ans) :-
 
 % Transform one elements in a list.
 one_transform_list(Goal1, Input, Acc, Ans) :-
-    any_transform_list_aux(Input, Goal1, Acc, Ans).
+    one_transform_list_aux(Input, Goal1, Acc, Ans).
 
 one_transform_list_aux([], _, _, _) :- false.
 
@@ -132,6 +133,7 @@ one_transform_list_aux([X|Xs], Goal1, Acc, Ans) :-
     (apply_transform(Goal1, X, Acc, A0) -> 
         Ans = A0; 
         one_transform_list_aux(Xs, Goal1, Acc, Ans)).
+
 
 
 

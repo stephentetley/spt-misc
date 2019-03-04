@@ -110,7 +110,7 @@ count_trafo(A, Acc, Ans) :-
     integer(Acc),
     Ans is Acc + 1.
 
-% Note allbu is not (currently?) strictly "backwards"
+% Note allbu is now traverses the kids list "backwards"
 demo07(Ans) :- 
     tree1(Body),
     allbu_transform(count_trafo, Body, 0, Ans).
