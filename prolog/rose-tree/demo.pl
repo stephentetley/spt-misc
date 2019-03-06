@@ -126,3 +126,17 @@ demo09(Ans) :-
 demo10(Ans) :- 
     tree1(Body),
     onetd_transform(count_trafo, Body, 0, Ans).
+
+accumulate(X,Xs,Ans) :- 
+    append(Xs, [X], Ans).
+
+cons(X,Xs,Ans) :- 
+    Ans = [X|Xs].
+
+all_children(Input,Ans) :-
+    all_transform(accumulate,Input,[],Ans).
+
+
+demo11(Ans) :-
+    tree1(Body),
+    all_children(Body,Ans).

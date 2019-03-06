@@ -9,6 +9,10 @@
             , all_rewrite/3
             , any_rewrite/3
             , one_rewrite/3
+            , rose_tree_transform/4
+            , all_transform/4
+            , any_transform/4
+            , one_transform/4
             , alltd_rewrite/3
             , alltd_transform/4
             , allbu_rewrite/3
@@ -26,6 +30,10 @@
     all_rewrite(2,+,-),
     any_rewrite(2,+,-),
     one_rewrite(2,+,-),
+    rose_tree_transform(3,+,+,-),
+    all_transform(3,+,+,-),
+    any_transform(3,+,+,-),
+    one_transform(3,+,+,-),
     alltd_rewrite(2,+,-),
     anytd_rewrite(2,+,-),
     onetd_rewrite(2,+,-),
