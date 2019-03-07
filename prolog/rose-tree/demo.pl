@@ -127,11 +127,17 @@ demo10(Ans) :-
     tree1(Body),
     onetd_transform(count_trafo, Body, 0, Ans).
 
-accumulate(X,Xs,Ans) :- 
-    append(Xs, [X], Ans).
+accumulate(X, Acc, Ans) :- 
+    append(Acc, [X], Ans).
 
 cons(X,Xs,Ans) :- 
     Ans = [X|Xs].
+
+
+%% Discrepancy - should the "payload" (here the integer 1) appear in the list of children?
+%% It would in syb-xpath, but things are generalized in KURE...
+%% The answer actually depends on the "universe" and now it is defined 
+%% KURE JFP Paper Section 4.3.2 Alternative Universes
 
 all_children(Input,Ans) :-
     all_transform(accumulate,Input,[],Ans).
@@ -140,3 +146,18 @@ all_children(Input,Ans) :-
 demo11(Ans) :-
     tree1(Body),
     all_children(Body,Ans).
+
+node_of_type(Type, Input) :-
+    Input =.. [Type|_].
+
+child_of_type_aux(Type, X, Acc, Ans) :-
+    (node_of_type(Type,X) -> 
+        append(Acc, X, Ans)
+    ; Ans = Acc ).
+
+child_of_type(Constructor, Input, Ans) :- 
+    any_transform(child_of_type_aux(Constructor), Input, [], Ans).
+
+demo12(Ans) :-
+    tree1(Body),
+    child_of_type(rose_tree, Body, Ans).
