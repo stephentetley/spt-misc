@@ -78,16 +78,13 @@ rose_tree_transform(T1, Input, Acc, Ans) :-
     all_transform_list(T1, Kids, Acc1, Ans).
     
 
-all_transform(T1, Input, Acc, Ans) :- 
-    Input = rose_tree(_,Kids),
+all_transform(T1, rose_tree(_,Kids), Acc, Ans) :- 
     all_transform_list(T1, Kids, Acc, Ans).
 
-any_transform(T1, Input, Acc, Ans) :- 
-    Input = rose_tree(_,Kids),
+any_transform(T1, rose_tree(_,Kids), Acc, Ans) :- 
     any_transform_list(T1, Kids, Acc, Ans).
 
-one_transform(T1, Input, Acc, Ans) :- 
-    Input = rose_tree(_,Kids),
+one_transform(T1, rose_tree(_,Kids), Acc, Ans) :- 
     one_transform_list(T1, Kids, Acc, Ans).
 
 
