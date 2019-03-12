@@ -47,7 +47,7 @@
 
     demo04(Ans) :- 
         tree1(Body),
-        traversals_base::all_rewrite(add1_rewrite, Body, Ans).
+        traversals::all_rewrite(add1_rewrite, Body, Ans).
 
 :- end_object.
 

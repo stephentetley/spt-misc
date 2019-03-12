@@ -10,15 +10,13 @@
         fail_transform/3,
         apply_rewrite/3,
         apply_transform/4,
-        all_rewrite_list/3,
+        all_rewrite_list/3
 
-        all_rewrite/3
     ]).
 
     :- meta_predicate(apply_rewrite(2,*,*)).
     :- meta_predicate(apply_transform(3,*,*,*)).
     :- meta_predicate(all_rewrite_list(2,*,*)).
-    :- meta_predicate(all_rewrite(2,*,*)).
 
     id_rewrite(Ans, Ans).
     
@@ -48,10 +46,7 @@
         apply_rewrite(Goal1, X, A1),
         all_rewrite_list_aux(Xs, Goal1, [A1|Acc], Ans).
 
-    all_rewrite(R1, Input, Ans) :- 
-        Input = rose_tree(Label, Kids),
-        all_rewrite_list(R1, Kids, Kids1),
-        Ans = rose_tree(Label, Kids1).        
+        
 
 :- end_object.
 
