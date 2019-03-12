@@ -13,7 +13,9 @@
         all_rewrite_list/3,
         all_transform_list/4,
         any_rewrite_list/3,
-        any_transform_list/4
+        any_transform_list/4,
+
+        alltd_rewrite/3
     ]).
 
     :- meta_predicate(apply_rewrite(2,*,*)).
@@ -25,9 +27,13 @@
     :- meta_predicate(one_rewrite_list(2,*,*)).
     :- meta_predicate(one_transform_list(3,*,*,*)).
 
-    :- mode(apply_rewrite(+callable,+term,-term), zero_or_more).
-    :- mode(apply_transform(+callable,+term,+term,-term), zero_or_more).
-    :- mode(all_rewrite_list(+callable,+term,-term), zero_or_more).
+    :- meta_predicate(alltd_rewrite(2,*,*)).
+
+    :- mode(apply_rewrite(+callable, +term, -term), zero_or_more).
+    :- mode(apply_transform(+callable, +term, +any, -term), zero_or_more).
+    :- mode(all_rewrite_list(+callable, +term, -term), zero_or_more).
+
+    :- mode(alltd_rewrite(+callable,+term,-term), zero_or_more).
 
     id_rewrite(Ans, Ans).
     
@@ -112,6 +118,12 @@
         (apply_transform(Goal1, X, Acc, A0) -> 
             Ans = A0; 
             one_transform_list_aux(Xs, Goal1, Acc, Ans)).
+    
+    alltd_rewrite(R1, Input, Ans) :-
+        apply_rewrite(R1, Input, A1),
+        A1 = rose_tree(Label1, Kids1),
+        all_rewrite_list(alltd_rewrite(R1), Kids1, Kids2),
+        Ans = rose_tree(Label1, Kids2).
 
 :- end_object.
 

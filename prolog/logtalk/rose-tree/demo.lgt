@@ -52,7 +52,7 @@
 
     demo05(Ans) :- 
         tree1(Body),
-        traversals::alltd_rewrite(add1_rewrite, Body, Ans).
+        traversals_base::alltd_rewrite(add1_rewrite, Body, Ans).
 
 :- end_object.
 
