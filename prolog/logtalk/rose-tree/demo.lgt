@@ -11,7 +11,8 @@
         demo01/1,
         demo02/1,
         demo03/1,
-        demo04/1
+        demo04/1,
+        demo05/1
     ]).
 
     demoZ :- 
@@ -48,6 +49,10 @@
     demo04(Ans) :- 
         tree1(Body),
         traversals::all_rewrite(add1_rewrite, Body, Ans).
+
+    demo05(Ans) :- 
+        tree1(Body),
+        traversals::alltd_rewrite(add1_rewrite, Body, Ans).
 
 :- end_object.
 
