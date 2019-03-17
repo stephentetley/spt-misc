@@ -28,12 +28,9 @@
     :- meta_predicate(apply_rewrite(2,*,*)).
     :- mode(apply_rewrite(+callable, +term, -term), zero_or_more).
     apply_rewrite(Goal1, Input, Ans) :-
-        writeln("apply_rewrite"),
-        writeln(Input),
-        call(Goal1, Input, Ans).
-/*         catch( call(Goal1, Input, Ans),
+        catch( call(Goal1, Input, Ans),
             _,
-            false). */
+            false).
 
     % all_rewrite_list
     :- meta_predicate(all_rewrite_list(2,*,*)).

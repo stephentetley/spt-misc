@@ -17,13 +17,8 @@
     implements(walkerp)).
 
     all_rewrite(R1, bin_tree(Label, Left, Right), Ans) :- 
-        writeln("all_rewrite 1..."),
-        writeln(Left),
-        call(R1, Left, Left1),
-        writeln("all_rewrite 2..."),
-        writeln(Right),
-        call(R1, Right, Right1),
-        writeln("all_rewrite 2..."),
+        ::apply_rewrite(R1, Left, Left1),
+        ::apply_rewrite(R1, Right, Right1),
         Ans = bin_tree(Label, Left1, Right1), 
         !.
 
