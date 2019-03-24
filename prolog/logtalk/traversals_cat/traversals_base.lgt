@@ -36,7 +36,7 @@
     :- meta_predicate(all_rewrite_list(2,*,*)).
     :- mode(all_rewrite_list(+callable, +term, -term), zero_or_more).
     all_rewrite_list(Goal1, Input, Ans) :-
-        all_rewrite_list_aux(Input, Goal1, [], Ans).
+        ::all_rewrite_list_aux(Input, Goal1, [], Ans).
 
     all_rewrite_list_aux([], _, Acc, Ans) :-
         {reverse(Acc, Ans)}.
