@@ -42,6 +42,11 @@
         tree1(Body),
         traversals_base::apply_rewrite(add1_rewrite, Body, Ans).        
 
+    :- public(demo02b/1).
+    demo02b(Ans) :- 
+        tree1(Body),
+        traversals_base::apply_rewrite(traversals_base::id_rewrite, Body, Ans).  
+
     demo03(Ans) :- 
         tree1(Body),
         traversals_base::all_rewrite_list(add1_rewrite, [Body,Body], Ans). 

@@ -38,7 +38,7 @@
 
 :- end_object.
 
-:- object(measure_relay(_Index, _Pram, _Start, _Stop), 
+:- object(measure_relay(_Index, _Param, _Start, _Stop), 
 	implements(relayp)).
 
 	index(Ans) :- 
@@ -47,9 +47,11 @@
 	param(Ans) :- 
 		parameter(2, Ans).
 	
+	:- public(start/1).
 	start(Ans) :- 
 		parameter(3, Ans).
 
+	:- public(stop/1).
 	stop(Ans) :- 
 		parameter(4, Ans).
 
