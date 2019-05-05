@@ -38,6 +38,39 @@
         read_rose_tree("data/rose_tree1.json", Tree),
         write_rose_tree("data/rose_tree1.output.json", Tree).
 
+    % BinTree
+    read_bin_tree(Src, Ans):-
+        open(Src, read, Stream),
+        json::json_read_dict(Stream, Dict),
+        close(Stream), 
+        decode_bin_tree(Dict, Ans).
 
+    decode_bin_tree(null, null).        
+    decode_bin_tree(Dict, Ans) :-
+        decode_bin_tree(Dict.left, Left),
+        decode_bin_tree(Dict.right, Right),
+        !,
+        Ans = bin(Dict.label, Left, Right).
+
+    :- public(test03/1).
+    test03(Ans) :- 
+        read_bin_tree("data/bin_tree1.json", Ans).
+
+    encode_bin_tree(null, null). 
+    encode_bin_tree(bin(A, Left, Right), Ans) :- 
+        encode_bin_tree(Left, LeftDict),
+        encode_bin_tree(Right, RightDict), 
+        Ans = _{label:A, left:LeftDict, right:RightDict}.
+
+    write_bin_tree(Dst, Tree) :- 
+        encode_bin_tree(Tree, Dict),
+        open(Dst, write, Stream),
+        json::json_write_dict(Stream, Dict), 
+        close(Stream).
+    
+    :- public(test04/0).
+    test04 :- 
+        read_bin_tree("data/bin_tree1.json", Tree),
+        write_bin_tree("data/bin_tree1.output.json", Tree).
 
 :- end_object.
