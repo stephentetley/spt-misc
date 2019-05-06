@@ -118,4 +118,30 @@
     test07(Ans) :-
         frees(1,2, Ans).
 
+    :- meta_predicate(decode_bin_tree_cps(*, 2, 2)).
+
+    decode_bin_tree_cps(null, Cont, Ans) :- 
+        call(Cont, null, Ans).
+
+    decode_bin_tree_cps(Dict, Cont, Ans) :-
+        decode_bin_tree_cps(Dict.left,  
+                            ({A,Cont,Dict,V2,Ans2}/[V1,Ans1] >> 
+                                 (decode_bin_tree_cps(Dict.right,
+                                                     ({A,Cont,Dict,V1}/[V2,Ans2] >> 
+                                                        (call(Cont, bin(Dict.label,V1,V2), Ans2))), 
+                                                      Ans1))),
+                            Ans), !.
+
+               
+    read_bin_tree_cps(Src, Ans):-
+            open(Src, read, Stream),
+            json::json_read_dict(Stream, Dict),
+            close(Stream), 
+            decode_bin_tree_cps(Dict, identity, Ans).
+
+    :- public(test08/1).
+    test08(Ans) :- 
+        read_bin_tree_cps("data/bin_tree1.json", Ans).
+
+
 :- end_object.
