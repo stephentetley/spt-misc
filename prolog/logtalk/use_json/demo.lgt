@@ -17,14 +17,12 @@
         decode_rose_tree(Dict, Ans).
 
     decode_rose_tree(Dict, Ans) :-
-        Label = Dict.node,
-        List = Dict.kids,
-        meta::map([X,Y]>> decode_rose_tree(X,Y), List, Kids),
-        Ans = node(Label, Kids).
+        meta::map([X,Y]>> decode_rose_tree(X,Y), Dict.kids, Kids),
+        Ans = node(Dict.node, Kids).
 
-    encode_rose_tree(node(A,Kids), Ans) :- 
-        meta::map([X,Y] >> encode_rose_tree(X,Y), Kids, Kids1),
-        Ans = _{ node:A, kids:Kids1}.
+    encode_rose_tree(node(A,Xs), Ans) :- 
+        meta::map([X,Y] >> encode_rose_tree(X,Y), Xs, Kids),
+        Ans = _{ node:A, kids:Kids}.
 
     write_rose_tree(Dst, Tree) :- 
         encode_rose_tree(Tree, Dict),
@@ -100,14 +98,14 @@
 
     
     write_bin_tree_cps(Dst, Tree) :- 
-            encode_bin_tree_cps(Tree, identity, Dict),
-            open(Dst, write, Stream),
-            json::json_write_dict(Stream, Dict), 
-            close(Stream).
+        encode_bin_tree_cps(Tree, identity, Dict),
+        open(Dst, write, Stream),
+        json::json_write_dict(Stream, Dict), 
+        close(Stream).
 
     :- public(test06/0).
     test06 :- 
-        read_bin_tree("data/bin_tree1.json", Tree),
+        read_bin_tree_cps("data/bin_tree1.json", Tree),
         write_bin_tree_cps("data/bin_tree1.cps.json", Tree).
 
     :- public(frees/3).
@@ -143,5 +141,45 @@
     test08(Ans) :- 
         read_bin_tree_cps("data/bin_tree1.json", Ans).
 
+    :- meta_predicate(decode_bin_tree_cont(*, 2, *)).
+    decode_bin_tree_cont(null, Cont, Ans) :- 
+        call(Cont, null, Ans).
+        
+    decode_bin_tree_cont(Dict, Cont, Ans) :-
+        decode_bin_tree_cont(Dict.left,  identity, V1),
+        decode_bin_tree_cont(Dict.right, identity, V2),
+        !,
+        call(Cont, bin(Dict.label, V1, V2), Ans).
+
+               
+    read_bin_tree_cont(Src, Ans):-
+        open(Src, read, Stream),
+        json::json_read_dict(Stream, Dict),
+        close(Stream), 
+        decode_bin_tree_cont(Dict, identity, Ans).
+    
+    :- public(test09/1).
+    test09(Ans) :- 
+        read_bin_tree_cps("data/bin_tree1.json", Ans).
+
+    :- meta_predicate(encode_bin_tree_cont(*, 2, *)).
+    encode_bin_tree_cont(null, Cont, Ans) :- 
+        call(Cont, null, Ans). 
+
+    encode_bin_tree_cont(bin(A, Left, Right), Cont, Ans) :- 
+        encode_bin_tree_cont(Left, identity, V1),
+        encode_bin_tree_cont(Right, identity, V2), 
+        call(Cont, _{label:A, left:V1, right:V2}, Ans).
+
+    write_bin_tree_cont(Dst, Tree) :- 
+        encode_bin_tree_cont(Tree, identity, Dict),
+        open(Dst, write, Stream),
+        json::json_write_dict(Stream, Dict), 
+        close(Stream).
+
+    :- public(test10/0).
+    test10 :- 
+        read_bin_tree_cont("data/bin_tree1.json", Tree),
+        write_bin_tree_cont("data/bin_tree1.cont.json", Tree).
 
 :- end_object.
