@@ -28,9 +28,11 @@ module ReadFlat =
     type Asset = 
         { Sai : string 
           CommonName : string
-          GridRef: string
-          AssetStatus: string
-          InAide: bool
+          HKey : string
+          GridRef : string
+          AssetStatus : string
+          InAide : bool
+          InstalledFrom : string
           Kids : Asset list
         }
 
@@ -60,12 +62,38 @@ module ReadFlat =
         | "TRUE" -> true
         | _ -> false
 
+    let hkeyToType (hkey:string) : string = 
+        let cleanKey = match hkey with | null -> "" | _ -> hkey
+        if cleanKey = "TODO" then 
+            "Undefined"
+        else
+            match cleanKey.Length with
+            | 1 -> "BusinessUnit"
+            | 4 -> "System"
+            | 8 -> "Function"
+            | 13 -> "Installation"
+            | 18 -> "SubInstallation"
+            | 20 -> "ProcessGroup"
+            | 24 -> "Process"
+            | 31 -> "PlantAssembly"
+            | 36 -> "PlantItem"
+            | _ -> "Undentified"
+
+    let findType (elementName:string) (hkey:string) : string = 
+        if elementName.StartsWith("EQUIPMENT: ") then
+            "Equipment"
+        else
+            hkeyToType hkey
+
+
     let makeAsset (row:AssetRow) (kids:Asset list) : Asset = 
         { Sai = row.Reference 
           CommonName = row.``Common Name``
+          HKey = row.``Hierarchy Key``
           GridRef = row.``Loc.Ref.``
           AssetStatus = row.AssetStatus
           InAide = readBool row.``Asset in AIDE ?``
+          InstalledFrom = row.``Installed From``
           Kids = kids
         }
 
@@ -93,13 +121,20 @@ module ReadFlat =
         let rec work asset cont = 
             workList asset.Kids (fun kids -> 
             let jsArr = JsonValue.Array (List.toArray kids)
+            let assetType = findType (commonName1 asset.CommonName) asset.HKey
+            let hkey = 
+                if assetType = "Equipment" then "" else asset.HKey
+                    
             cont (JsonValue.Record 
                     [| ("sai",              JsonValue.String asset.Sai)
+                     ; ("type",             JsonValue.String assetType)    
+                     ; ("hkey",             JsonValue.String hkey)
                      ; ("elementName",      JsonValue.String <| commonName1 asset.CommonName )
                      ; ("commonName",       JsonValue.String asset.CommonName )
                      ; ("gridRef",          JsonValue.String asset.GridRef )
                      ; ("assetStatus",      JsonValue.String asset.AssetStatus )
-                     ; ("inAide",           JsonValue.Boolean asset.InAide)         
+                     ; ("inAide",           JsonValue.Boolean asset.InAide)  
+                     ; ("installedFrom",    JsonValue.String asset.InstalledFrom)
                      ; ("kids",             jsArr)
                     |]))
         and workList xs cont =
