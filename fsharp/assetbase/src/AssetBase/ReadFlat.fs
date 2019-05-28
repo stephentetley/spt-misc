@@ -30,6 +30,7 @@ module ReadFlat =
           CommonName : string
           GridRef: string
           AssetStatus: string
+          InAide: bool
           Kids : Asset list
         }
 
@@ -53,13 +54,19 @@ module ReadFlat =
         rows |> List.filter (fun row -> isDirectPrefix parentName row.``Common Name``)
 
 
+    let readBool (value:string) : bool = 
+        match value with 
+        | null | "FALSE" -> false
+        | "TRUE" -> true
+        | _ -> false
 
     let makeAsset (row:AssetRow) (kids:Asset list) : Asset = 
         { Sai = row.Reference 
           CommonName = row.``Common Name``
-          Kids = kids
           GridRef = row.``Loc.Ref.``
           AssetStatus = row.AssetStatus
+          InAide = readBool row.``Asset in AIDE ?``
+          Kids = kids
         }
 
     
@@ -92,7 +99,8 @@ module ReadFlat =
                      ; ("commonName",       JsonValue.String asset.CommonName )
                      ; ("gridRef",          JsonValue.String asset.GridRef )
                      ; ("assetStatus",      JsonValue.String asset.AssetStatus )
-                     ; ("assets",           jsArr)
+                     ; ("inAide",           JsonValue.Boolean asset.InAide)         
+                     ; ("kids",             jsArr)
                     |]))
         and workList xs cont =
             match xs with
