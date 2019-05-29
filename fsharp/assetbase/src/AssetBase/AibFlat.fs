@@ -3,29 +3,29 @@
 
 namespace AssetBase
 
-[<AutoOpen>]
-module ReadFlat =
+module AibFlat =
     
     open System.IO
     open FSharp.Interop.Excel
     open FSharp.Data
 
-    type AssetTable = 
-        ExcelFile< @"..\data\sample_site.xlsx"
+    type AibTable = 
+        ExcelFile< @"..\data\aib_sample_site.xlsx"
                  , HasHeaders = true
                  , ForceString = true >
 
-    type AssetRow = AssetTable.Row
+    type AibRow = AibTable.Row
 
-    let readFlat (path:string) : AssetRow list = 
-        let table = new AssetTable(filename = path)
-        let isBlank (row:AssetRow) = 
+    let readAibFlat (path:string) : AibRow list = 
+        let table = new AibTable(filename = path)
+        let isBlank (row:AibRow) = 
             match row.Reference with 
             | null | "" -> true
             | _ -> false
         table.Data |> Seq.filter (not << isBlank) |> Seq.toList
 
-    type Asset = 
+    /// Assets are built as a rose tree
+    type Node = 
         { Sai : string 
           CommonName : string
           HKey : string
@@ -33,7 +33,7 @@ module ReadFlat =
           AssetStatus : string
           InAide : bool
           InstalledFrom : string
-          Kids : Asset list
+          Kids : Node list
         }
 
     let commonName1 (fullName: string) : string = 
@@ -52,7 +52,7 @@ module ReadFlat =
         else 
             false
 
-    let findChildRows (parentName:string) (rows:AssetRow list) : AssetRow list = 
+    let findChildRows (parentName:string) (rows:AibRow list) : AibRow list = 
         rows |> List.filter (fun row -> isDirectPrefix parentName row.``Common Name``)
 
 
@@ -86,7 +86,7 @@ module ReadFlat =
             hkeyToType hkey
 
 
-    let makeAsset (row:AssetRow) (kids:Asset list) : Asset = 
+    let makeNode (row:AibRow) (kids:Node list) : Node = 
         { Sai = row.Reference 
           CommonName = row.``Common Name``
           HKey = row.``Hierarchy Key``
@@ -99,25 +99,25 @@ module ReadFlat =
 
     
 
-    let toAsset (input:AssetRow list) : Asset option = 
-        let rec work (rows:AssetRow list) (parentName:string) (cont : Asset list -> Asset) = 
+    let aibToNode (input:AibRow list) : Node option = 
+        let rec work (rows:AibRow list) (parentName:string) (cont : Node list -> Node) = 
             let childRows = findChildRows parentName rows
             workList childRows rows cont
-        and workList (kids:AssetRow List) (rows:AssetRow list) (cont : Asset list -> Asset) = 
+        and workList (kids:AibRow List) (rows:AibRow list) (cont : Node list -> Node) = 
             match kids with
             | [] -> cont []
             | k1 :: rest -> 
                 work rows (k1.``Common Name``) (fun ys ->
-                let node1 = makeAsset k1 ys 
+                let node1 = makeNode k1 ys 
                 workList rest rows (fun nodes -> 
                 cont (node1 :: nodes)))
         match input with 
         | [] -> None
         | x :: xs -> 
-            work xs (x.``Common Name``) (makeAsset x) |> Some
+            work xs (x.``Common Name``) (makeNode x) |> Some
 
 
-    let toJsonValue (input:Asset) : JsonValue =
+    let toJsonValue (input:Node) : JsonValue =
         let rec work asset cont = 
             workList asset.Kids (fun kids -> 
             let jsArr = JsonValue.Array (List.toArray kids)
@@ -146,8 +146,8 @@ module ReadFlat =
                 cont (v1::vs)))               
         work input id
 
-    let xlsxToJson (inputPath:string) (outputPath:string) : unit = 
-        match readFlat inputPath |> toAsset |> Option.map toJsonValue with
+    let aibXlsxToJson (inputPath:string) (outputPath:string) : unit = 
+        match readAibFlat inputPath |> aibToNode |> Option.map toJsonValue with
         | None -> printfn "Read error"
         | Some json -> 
             use sw = new StreamWriter (path = outputPath)

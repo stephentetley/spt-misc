@@ -5,7 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="AssetBase\ReadFlat.fs" />
+    <Compile Include="AssetBase\AibFlat.fs" />
+    <Compile Include="AssetBase\S4Flat.fs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,7 +2,7 @@
 // License: BSD 3 Clause
 
 #r "netstandard"
-#r "System.Linq.dll"
+#r "System.Xml.Linq.dll"
 open System.IO
 
 
@@ -23,15 +23,16 @@ open FSharp.Data
 open FSharp.Data.JsonExtensions
 
 
-#load "..\src\AssetBase\ReadFlat.fs"
-open AssetBase
+#load "..\src\AssetBase\AibFlat.fs"
+open AssetBase.AibFlat
 
 let demo01 () = 
-    readFlat @"G:\work\Projects\asset_sync\ald_.xlsx" 
-        |> toAsset
+    readAibFlat @"G:\work\Projects\asset_sync\samples\aib_ald_.xlsx" 
+        |> aibToNode
         |> Option.map toJsonValue
 
 
 let demo02 () = 
-    xlsxToJson @"G:\work\Projects\asset_sync\ald_.xlsx"  @"G:\work\Projects\asset_sync\ald_.json" 
+    aibXlsxToJson @"G:\work\Projects\asset_sync\samples\aib_ald_.xlsx"  
+                  @"G:\work\Projects\asset_sync\samples\aib_ald_.json" 
 
