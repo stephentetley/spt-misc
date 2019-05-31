@@ -22,17 +22,16 @@ open FSharp.Interop.Excel
 open FSharp.Data
 open FSharp.Data.JsonExtensions
 
-
+#load "..\src\AssetBase\Attributes.fs"
 #load "..\src\AssetBase\AibFlat.fs"
+#load "..\src\AssetBase\S4Flat.fs"
 open AssetBase.AibFlat
+open AssetBase.S4Flat
+
+
 
 let demo01 () = 
-    readAibFlat @"G:\work\Projects\asset_sync\samples\aib_ald_.xlsx" 
-        |> aibToNode
-        |> Option.map toJsonValue
-
-
-let demo02 () = 
     aibXlsxToJson @"G:\work\Projects\asset_sync\samples\aib_ald_.xlsx"  
                   @"G:\work\Projects\asset_sync\samples\aib_ald_.json" 
+
 

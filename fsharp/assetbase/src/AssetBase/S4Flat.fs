@@ -63,19 +63,3 @@ module S4Flat =
 
     
 
-    //let s4ToNode (input:S4Row list) : Node option = 
-    //    let rec work (rows:S4Row list) (parentName:string) (cont : Node list -> Node) = 
-    //        let childRows = findChildRows parentName rows
-    //        workList childRows rows cont
-    //    and workList (kids:S4Row List) (rows:S4Row list) (cont : Node list -> Node) = 
-    //        match kids with
-    //        | [] -> cont []
-    //        | k1 :: rest -> 
-    //            work rows (k1.``Common Name``) (fun ys ->
-    //            let node1 = makeNode k1 ys 
-    //            workList rest rows (fun nodes -> 
-    //            cont (node1 :: nodes)))
-    //    match input with 
-    //    | [] -> None
-    //    | x :: xs -> 
-    //        work xs (x.``Common Name``) (makeNode x) |> Some
