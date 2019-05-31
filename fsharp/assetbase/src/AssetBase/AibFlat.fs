@@ -9,6 +9,8 @@ module AibFlat =
     open FSharp.Interop.Excel
     open FSharp.Data
 
+    open AssetBase.Attributes
+
     type AibTable = 
         ExcelFile< @"..\data\aib_sample_site.xlsx"
                  , HasHeaders = true
@@ -24,15 +26,14 @@ module AibFlat =
             | _ -> false
         table.Data |> Seq.filter (not << isBlank) |> Seq.toList
 
+
+
     /// Assets are built as a rose tree
     type Node = 
-        { Sai : string 
-          CommonName : string
-          HKey : string
-          GridRef : string
-          AssetStatus : string
-          InAide : bool
-          InstalledFrom : string
+        { AssetReference : string       // aka SAI number
+          NodeName : string
+          NodeType : string
+          Attribs : Attributes
           Kids : Node list
         }
 
@@ -85,15 +86,27 @@ module AibFlat =
         else
             hkeyToType hkey
 
+    
+    let makeAttributes (row:AibRow) : Attributes = 
+        let assetType = findType (commonName1 row.``Common Name``) row.``Hierarchy Key``
+        let hkey = if assetType = "Equipment" then "" else row.``Hierarchy Key``
+
+        Map.empty 
+            |> addNotNull "gridRef"         (JsonValue.String row.``Loc.Ref.``)
+            |> addNotNull "installedFrom"   (JsonValue.String row.``Installed From``)
+            |> addNotNull "hkey"            (JsonValue.String hkey)
+            |> addNotNull "assetStatus"     (JsonValue.String row.AssetStatus)
+            |> addNotNull "inAide"          (JsonValue.Boolean <| readBool row.``Asset in AIDE ?``)
+            |> addNotNull "manufacturer"    (JsonValue.String row.Manufacturer)
+            |> addNotNull "model"           (JsonValue.String row.Model)
 
     let makeNode (row:AibRow) (kids:Node list) : Node = 
-        { Sai = row.Reference 
-          CommonName = row.``Common Name``
-          HKey = row.``Hierarchy Key``
-          GridRef = row.``Loc.Ref.``
-          AssetStatus = row.AssetStatus
-          InAide = readBool row.``Asset in AIDE ?``
-          InstalledFrom = row.``Installed From``
+        let assetType = findType (commonName1 row.``Common Name``) row.``Hierarchy Key``
+
+        { AssetReference = row.Reference 
+          Attribs = makeAttributes row
+          NodeName = commonName1 row.``Common Name``
+          NodeType = assetType
           Kids = kids
         }
 
@@ -121,20 +134,12 @@ module AibFlat =
         let rec work asset cont = 
             workList asset.Kids (fun kids -> 
             let jsArr = JsonValue.Array (List.toArray kids)
-            let assetType = findType (commonName1 asset.CommonName) asset.HKey
-            let hkey = 
-                if assetType = "Equipment" then "" else asset.HKey
-                    
+                   
             cont (JsonValue.Record 
-                    [| ("sai",              JsonValue.String asset.Sai)
-                     ; ("type",             JsonValue.String assetType)    
-                     ; ("hkey",             JsonValue.String hkey)
-                     ; ("elementName",      JsonValue.String <| commonName1 asset.CommonName )
-                     ; ("commonName",       JsonValue.String asset.CommonName )
-                     ; ("gridRef",          JsonValue.String asset.GridRef )
-                     ; ("assetStatus",      JsonValue.String asset.AssetStatus )
-                     ; ("inAide",           JsonValue.Boolean asset.InAide)  
-                     ; ("installedFrom",    JsonValue.String asset.InstalledFrom)
+                    [| ("assetReference",   JsonValue.String asset.AssetReference)
+                     ; ("name",             JsonValue.String asset.NodeName)
+                     ; ("type",             JsonValue.String asset.NodeType)
+                     ; ("attributes",       toJsonRecord asset.Attribs)
                      ; ("kids",             jsArr)
                     |]))
         and workList xs cont =
