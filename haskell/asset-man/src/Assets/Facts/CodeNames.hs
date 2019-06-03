@@ -24,3 +24,4 @@ module Assets.Facts.CodeNames where
 level2FunctionDescription :: String -> String
 level2FunctionDescription "CAA" = "Control and Automation"
 level2FunctionDescription "E"   = "Electrical Power Supply"
+level2FunctionDescription _     = "<unknown>"

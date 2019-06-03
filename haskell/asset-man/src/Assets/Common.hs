@@ -57,3 +57,4 @@ attributesFromJSON (JSObject obj) = do
     xs <- mapM decodeNameValue (fromJSObject obj)
     return (Map.fromList xs)
 
+attributesFromJSON _ = fail "attributesFromJSON - Not a JSObject"

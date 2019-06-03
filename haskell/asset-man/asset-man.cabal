@@ -31,10 +31,12 @@ library
     kure >= 3.0
 
   exposed-modules:
+    Assets.Facts.CodeMapping,
+    Assets.Facts.CodeNames,
     Assets.Common,
     Assets.AibTypes,
-    Assets.S4Types
-    
+    Assets.S4Types,
+    Assets.InstallationToSite    
     
 
   other-modules:
