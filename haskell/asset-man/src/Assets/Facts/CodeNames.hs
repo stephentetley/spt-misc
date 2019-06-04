@@ -17,12 +17,16 @@
 
 
 
-module Assets.Facts.CodeNames where
+module Assets.Facts.CodeNames
+    (
+        level2FunctionDescription
+    ) where
 
-
+import Prelude hiding ( fail )        
+import Control.Monad.Fail                   -- package: base
 
 -- level2_function_description(code:atom, decription:atom).
-level2FunctionDescription :: String -> String
-level2FunctionDescription "CAA" = "Control and Automation"
-level2FunctionDescription "E"   = "Electrical Power Supply"
-level2FunctionDescription _     = "<unknown>"
+level2FunctionDescription :: MonadFail m => String -> m String
+level2FunctionDescription "CAA"     = return "Control and Automation"
+level2FunctionDescription "E"       = return "Electrical Power Supply"
+level2FunctionDescription _key      = fail ("unknown code: " ++ _key)

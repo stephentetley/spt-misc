@@ -22,6 +22,7 @@ import Text.JSON                        -- package: json
 import Language.KURE                    -- package: KURE
 
 import qualified Data.Map as Map
+-- import Data.List
 
 import Assets.Facts.SiteNameMapping
 import Assets.Common
@@ -46,23 +47,28 @@ demo0c :: Maybe SiteDetails
 demo0c = siteNameMapping "SAI00001000"
 
 
+
+
+demo01 :: IO ()
+demo01 = do
+    json <- readFile "data/aib_ald.json"
+    let (aibResult::Result AibInstallation) = decodeStrict json
+    case aibResult of
+        Error errMsg -> error errMsg
+        Ok a1 -> 
+            case applyTransform installationToSite a1 of
+                Left errMsg -> error errMsg
+                Right ans -> 
+                    let output = encode ans 
+                    in writeFile "demo/output/s4_output_ald.json" output
+
+
+
 demo02 :: IO S4Site
 demo02 = do
     json <- readFile "data/s4_ald.json"
     let (ans::Result S4Site) = decodeStrict json
     case ans of
         Error errMsg -> error errMsg
-        Ok a1 -> return a1
-
-
-demo03 :: IO S4Site
-demo03 = do
-    json <- readFile "data/aib_ald.json"
-    let (aibResult::Result AibInstallation) = decodeStrict json
-    case aibResult of
-        Error errMsg -> error errMsg
-        Ok a1 -> 
-            case applyTransform rootNode a1 of
-                Left errMsg -> error errMsg
-                Right ans -> return ans
+        Ok a1 -> return a1                    
 

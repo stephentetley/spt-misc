@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables        #-}
 {-# OPTIONS -Wall #-}
 
 
@@ -17,14 +18,22 @@
 
 
 
-module Assets.InstallationToSite where
+module Assets.InstallationToSite 
+    ( 
+      TransformE
+    , RewriteE
+    , applyTransform
+    , installationToSite
+    ) where
 
-import Language.KURE
+import Control.Monad      
 
-import Assets.Facts.CodeMapping   
-import Assets.Facts.CodeNames
+import Language.KURE                    -- package: KURE
+
+-- import Assets.Facts.CodeMapping   
+-- import Assets.Facts.CodeNames
 import Assets.Facts.SiteNameMapping
-import Assets.Common
+-- import Assets.Common
 import Assets.AibTypes
 import qualified Assets.S4Types as S4
 
@@ -35,19 +44,34 @@ applyTransform :: TransformE a b -> a -> Either String b
 applyTransform t = runKureM Right (Left . showKureExc) . applyT t mempty
 
 
+
+installationToSite :: TransformE AibInstallation S4.S4Site
+installationToSite = rootNode
+
+
 rootNode :: TransformE AibInstallation S4.S4Site
 rootNode = do 
     inst@AibInstallation {} <- idR
     info <- siteNameMapping (installation_ref inst)
+    let kids :: [AibInstallationKid] = installation_kids inst
+    (allfuns :: [S4.S4Function]) <- return [] -- aibInstallationT installationKid
     return S4.S4Site 
               { S4.site_code           = floc1 info
               , S4.site_name           = site_name info
-              , S4.site_attributes     = noAttrs
-              , S4.site_kids           = []
+              , S4.site_attributes     = installation_attributes inst
+              , S4.site_kids           = {- S4.coalesceFunctions -} allfuns
               }
 
 
+installationKids :: TransformE [AibInstallationKid] [S4.S4Function]
+installationKids = do
+    return []
 
+installationKid :: TransformE AibInstallationKid S4.S4Function
+installationKid = do
+    fail "TODO"
+
+{-
 generateS4ProcessNode level1code instType (procgKey, procNode) = 
     S4.S4Process 
         { S4.process_floc_code             = ""
@@ -59,3 +83,5 @@ generateS4ProcessNode level1code instType (procgKey, procNode) =
   where
     procKey = process_ref procNode
     Just (level2Code, level3Code, level4Code) = codeMapping (level1code, procgKey, procKey)
+
+-}    

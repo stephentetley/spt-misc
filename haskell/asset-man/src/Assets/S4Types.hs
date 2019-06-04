@@ -73,7 +73,11 @@ module Assets.S4Types
   , s4MainItemAnyR
   , s4MainItemOneR
 
+  , coalesceFunctions
+  
   ) where
+
+import Data.List
 
 import Text.JSON                        -- package: json
 import Language.KURE                    -- package: kure
@@ -664,3 +668,21 @@ instance Walker c SUniverse where
             allR_System         = s4SystemAllR (extractR r)
             allR_Subsystem      = s4SubsystemAllR (extractR r)
             allR_MainItem       = s4MainItemAllR (extractR r)
+
+
+-------------------------------------------------------------------------------
+-- Coalescing (when building) 
+
+coalesceFunctions :: [S4Function] -> [S4Function]
+coalesceFunctions = 
+        map coalesce1 . groupBy equality . sortBy ordering
+    where
+        ordering a b = compare (function_floc_code a) (function_floc_code b)
+        equality a b = function_floc_code a == function_floc_code b
+        coalesce1 [] = error "coalesceFunctions - impossible"
+        coalesce1 (x:xs) = foldr coalesceB x xs
+        coalesceB a acc = 
+            let kids1 = function_kids acc ++ function_kids a
+            in acc { function_kids = kids1 }
+
+       

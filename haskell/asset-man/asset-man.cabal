@@ -33,6 +33,7 @@ library
   exposed-modules:
     Assets.Facts.CodeMapping,
     Assets.Facts.CodeNames,
+    Assets.Facts.SiteNameMapping,
     Assets.Common,
     Assets.FlocPath,
     Assets.AibTypes,
