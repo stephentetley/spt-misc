@@ -39,7 +39,8 @@ codeMapping3 (_,_,_) = throwM (LookupException $ "codeMapping3 - no mapping")
 
 -- NOTE
 -- I think we can filter the rules when generating this table to
--- make a deterministic 'codeMapping2 
+-- make a deterministic 'codeMapping2' provided both parts of
+-- the pair are non-blank.
 
 -- | (TypeName, ProcessGroupName) -> (FunctionCode, ProcGroupCode)
 --

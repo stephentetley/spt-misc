@@ -31,7 +31,7 @@ module Assets.InstallationToSite
 import Language.KURE                    -- package: KURE
 
 import Assets.Facts.CodeMapping   
--- import Assets.Facts.CodeNames
+import Assets.Facts.CodeNames
 import Assets.Facts.SiteNameMapping
 import Assets.Common
 import Assets.FlocPath
@@ -41,7 +41,7 @@ import qualified Assets.S4Types as S4
 
 -- TODO - context should be FlocCode
 
-type TransformE a b = Transform FlocPath KureM a b
+type TransformE a b = Transform () KureM a b
 type RewriteE a b = TransformE a b
 
 applyTransform :: TransformE a b -> a -> Either String b
@@ -76,36 +76,54 @@ installationKid_ProcessGroup siteType = withPatFailExc (strategyFailure "Process
     AibInstallationKid_ProcessGroup kid <- idR
     let groupName = process_group_name kid
     (funCode, _) <- codeMapping2 (siteType, groupName)
-    return $ makeS4Function funCode
+    makeS4Function funCode
 
 installationKid_Process :: String -> TransformE AibInstallationKid S4.S4Function  
 installationKid_Process siteType = withPatFailExc (strategyFailure "Process") $ do
     AibInstallationKid_Process kid <- idR
     let groupName = ""
     (funCode, _) <- codeMapping2 (siteType, groupName)
-    return $ makeS4Function funCode
+    makeS4Function funCode
 
-makeS4Function :: String -> S4.S4Function
-makeS4Function funCode = 
-    S4.S4Function
-        { S4.function_floc_code      = "TODO"
+makeS4Function :: MonadThrow m => String -> m S4.S4Function
+makeS4Function funCode = do
+    funName <- level2FunctionDescription funCode
+    return $ S4.S4Function
+        { S4.function_floc_code      = ""
         , S4.function_code           = funCode
-        , S4.function_name           = "TODO"
+        , S4.function_name           = funName
         , S4.function_attributes     = noAttrs
         , S4.function_kids           = []
         }
 
-{-
-generateS4ProcessNode level1code instType (procgKey, procNode) = 
-    S4.S4Process 
-        { S4.process_floc_code             = ""
-        , S4.process_code                  = level4Code
-        , S4.process_name                  = ""
-        , S4.process_attributes            = noAttrs
-        , S4.process_kids                  = []
-        }
-  where
-    procKey = process_ref procNode
-    Just (level2Code, level3Code, level4Code) = codeMapping (level1code, procgKey, procKey)
+processGroup :: TransformE AibProcessGroup S4.S4ProcessGroup
+processGroup = do
+    group@AibProcessGroup {} <- idR
+    allprocs <- aibProcessGroupT processGroupKid (\_ _ _ kids -> kids)
+    return $ S4.S4ProcessGroup 
+                { S4.process_group_floc_code    = ""
+                , S4.process_group_code         = "TODO"
+                , S4.process_group_name         = "TODO"
+                , S4.process_group_attributes   = noAttrs
+                , S4.process_group_kids         = allprocs
+                }
 
--}    
+processGroupKid :: TransformE AibProcessGroupKid S4.S4Process
+processGroupKid = processGroupKid_Process
+    
+processGroupKid_Process :: TransformE AibProcessGroupKid S4.S4Process
+processGroupKid_Process = 
+    aibProcessGroupKid_ProcessT process (\a -> a)
+
+process :: TransformE AibProcess S4.S4Process
+process = do
+    group@AibProcess {} <- idR
+    return $ S4.S4Process
+                { S4.process_floc_code          = ""
+                , S4.process_code               = ""
+                , S4.process_name               = ""
+                , S4.process_attributes         = noAttrs
+                , S4.process_kids               = []
+                }
+
+ 

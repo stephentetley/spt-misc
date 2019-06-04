@@ -25,10 +25,11 @@ module Assets.Facts.CodeNames
 
 import Language.KURE.MonadCatch         -- package: KURE
 
-import Assets.Common
+-- import Assets.Common
 
 -- level2_function_description(code:atom, decription:atom).
 level2FunctionDescription :: MonadThrow m => String -> m String
 level2FunctionDescription "CAA"     = return "Control and Automation"
 level2FunctionDescription "E"       = return "Electrical Power Supply"
-level2FunctionDescription _key      = throwM (LookupException $ "unknown code: " ++ _key)
+level2FunctionDescription key       = return $ "<To add: " ++ key ++ ">" 
+-- level2FunctionDescription _key      = throwM (LookupException $ "unknown code: " ++ _key)
