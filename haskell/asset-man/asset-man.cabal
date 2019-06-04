@@ -34,6 +34,7 @@ library
     Assets.Facts.CodeMapping,
     Assets.Facts.CodeNames,
     Assets.Common,
+    Assets.FlocPath,
     Assets.AibTypes,
     Assets.S4Types,
     Assets.InstallationToSite    

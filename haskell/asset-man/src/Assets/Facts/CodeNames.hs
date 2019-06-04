@@ -20,6 +20,7 @@
 module Assets.Facts.CodeNames where
 
 
+
 -- level2_function_description(code:atom, decription:atom).
 level2FunctionDescription :: String -> String
 level2FunctionDescription "CAA" = "Control and Automation"

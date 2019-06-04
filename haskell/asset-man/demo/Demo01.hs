@@ -18,11 +18,14 @@
 
 module Demo01 where
 
-import Text.JSON
+import Text.JSON                        -- package: json
+import Language.KURE                    -- package: KURE
 
 import qualified Data.Map as Map
 
+import Assets.Facts.SiteNameMapping
 import Assets.Common
+import Assets.FlocPath
 import Assets.AibTypes
 import Assets.S4Types
 import Assets.InstallationToSite
@@ -31,8 +34,17 @@ import Assets.InstallationToSite
 attrs :: Attributes
 attrs = Map.fromList [("gridRef", AttrString "SE7865490277")]
 
-demo01 :: Result Attributes
-demo01 = attributesFromJSON $ attributesToJSON attrs
+demo0a :: Result Attributes
+demo0a = attributesFromJSON $ attributesToJSON attrs
+
+
+demo0b :: String
+demo0b = toString $ singleton "ABB01" @@ "CAA" @@ "TEL"
+
+
+demo0c :: Maybe SiteDetails
+demo0c = siteNameMapping "SAI00001000"
+
 
 demo02 :: IO S4Site
 demo02 = do
@@ -43,10 +55,14 @@ demo02 = do
         Ok a1 -> return a1
 
 
-demo03 :: IO AibInstallation
+demo03 :: IO S4Site
 demo03 = do
     json <- readFile "data/aib_ald.json"
-    let (ans::Result AibInstallation) = decodeStrict json
-    case ans of
+    let (aibResult::Result AibInstallation) = decodeStrict json
+    case aibResult of
         Error errMsg -> error errMsg
-        Ok a1 -> return a1
+        Ok a1 -> 
+            case applyTransform rootNode a1 of
+                Left errMsg -> error errMsg
+                Right ans -> return ans
+

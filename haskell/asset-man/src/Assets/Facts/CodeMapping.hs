@@ -22,8 +22,11 @@ module Assets.Facts.CodeMapping
       codeMapping
     ) where
 
--- Inputs look nicer as a tuple...
+import Prelude hiding ( fail )        
+import Control.Monad.Fail                   -- package: base
 
-codeMapping :: (String, String, String) -> Maybe (String, String, String)
-codeMapping ("SPS", "", "SEWAGE PUMPING") = Just ("", "", "PMG")
-codeMapping (_,_,_) = Nothing
+codeMapping :: MonadFail m => (String, String, String) -> m (String, String, String)
+codeMapping ("SPS", "", "SEWAGE PUMPING") = return ("", "", "PMG")
+codeMapping (_,_,_) = fail "no mapping"
+
+
