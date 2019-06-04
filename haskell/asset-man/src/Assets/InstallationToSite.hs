@@ -30,13 +30,15 @@ module Assets.InstallationToSite
 
 import Language.KURE                    -- package: KURE
 
--- import Assets.Facts.CodeMapping   
+import Assets.Facts.CodeMapping   
 -- import Assets.Facts.CodeNames
 import Assets.Facts.SiteNameMapping
 import Assets.Common
 import Assets.AibTypes
 import Assets.AibUniverse
 import qualified Assets.S4Types as S4
+
+-- TODO - context should be FlocCode
 
 type TransformE a b = Transform () KureM a b
 type RewriteE a b = TransformE a b
@@ -54,7 +56,8 @@ installation :: TransformE AibInstallation S4.S4Site
 installation = do 
     inst@AibInstallation {} <- idR
     info <- siteNameMapping (installation_ref inst)
-    allfuns <- aibInstallationT installationKid (\_ _ _ _ kids -> kids)
+    let siteType = site_type info
+    allfuns <- aibInstallationT (installationKid siteType) (\_ _ _ _ kids -> kids)
     return S4.S4Site 
               { S4.site_code           = floc1 info
               , S4.site_name           = site_name info
@@ -62,22 +65,34 @@ installation = do
               , S4.site_kids           = S4.coalesceFunctions allfuns
               }
 
-installationKid :: TransformE AibInstallationKid S4.S4Function
-installationKid = 
-    installationKid_ProcessGroup <+ installationKid_Process
-  where
-    installationKid_ProcessGroup = installationKid_TEMP
-    installationKid_Process = installationKid_TEMP
+installationKid :: String -> TransformE AibInstallationKid S4.S4Function
+installationKid siteType = 
+    installationKid_ProcessGroup siteType 
+      <+ installationKid_Process siteType
 
-installationKid_TEMP :: TransformE AibInstallationKid S4.S4Function
-installationKid_TEMP = do
-    return S4.S4Function
-              { S4.function_floc_code      = "TODO"
-              , S4.function_code           = "TODO"
-              , S4.function_name           = "TODO"
-              , S4.function_attributes     = noAttrs
-              , S4.function_kids           = []
-              }
+installationKid_ProcessGroup :: String -> TransformE AibInstallationKid S4.S4Function      
+installationKid_ProcessGroup siteType = withPatFailExc (strategyFailure "ProcessGroup") $ do
+    AibInstallationKid_ProcessGroup kid <- idR
+    let groupName = process_group_name kid
+    (funCode, _) <- codeMapping2 (siteType, groupName)
+    return $ makeS4Function funCode
+
+installationKid_Process :: String -> TransformE AibInstallationKid S4.S4Function  
+installationKid_Process siteType = withPatFailExc (strategyFailure "Process") $ do
+    AibInstallationKid_Process kid <- idR
+    let groupName = ""
+    (funCode, _) <- codeMapping2 (siteType, groupName)
+    return $ makeS4Function funCode
+
+makeS4Function :: String -> S4.S4Function
+makeS4Function funCode = 
+    S4.S4Function
+        { S4.function_floc_code      = "TODO"
+        , S4.function_code           = funCode
+        , S4.function_name           = "TODO"
+        , S4.function_attributes     = noAttrs
+        , S4.function_kids           = []
+        }
 
 {-
 generateS4ProcessNode level1code instType (procgKey, procNode) = 
