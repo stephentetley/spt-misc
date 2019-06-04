@@ -43,4 +43,4 @@ data SiteDetails = SiteDetails
 
 siteNameMapping :: MonadThrow m =>  String -> m SiteDetails
 siteNameMapping "SAI00001000"   = return $ SiteDetails "STW" "Alderbrooks WwTW" "ALD01" "WWT"
-siteNameMapping key             = throwM (LookupException  $ "no Site Mapping: " ++ key)
+siteNameMapping key             = throwM (LookupException $ "no Site Mapping: " ++ key)

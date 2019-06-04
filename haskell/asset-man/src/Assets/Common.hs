@@ -70,3 +70,6 @@ attributesFromJSON (JSObject obj) = do
     return (Map.fromList xs)
 
 attributesFromJSON _ = fail "attributesFromJSON - Not a JSObject"
+
+
+

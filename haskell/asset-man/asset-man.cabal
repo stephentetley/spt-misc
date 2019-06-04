@@ -40,6 +40,7 @@ library
     Assets.AibUniverse,
     Assets.S4Types,
     Assets.S4Universe,
+    Assets.S4Pretty,
     Assets.InstallationToSite    
     
 

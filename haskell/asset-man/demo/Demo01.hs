@@ -30,6 +30,7 @@ import Assets.FlocPath
 import Assets.AibTypes
 import Assets.S4Types
 import Assets.InstallationToSite
+import qualified Assets.S4Pretty as S4
 
 
 attrs :: Attributes
@@ -58,9 +59,10 @@ demo01 = do
         Ok a1 -> 
             case applyTransform installationToSite a1 of
                 Left errMsg -> error errMsg
-                Right ans -> 
+                Right ans -> do
                     let output = encode ans 
-                    in writeFile "demo/output/s4_output_ald.json" output
+                    writeFile "demo/output/s4_output_ald.json" output
+                    writeFile "demo/output/s4_output_ald.txt" (S4.s4DrawTree ans)
 
 
 
