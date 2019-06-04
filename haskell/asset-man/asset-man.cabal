@@ -37,7 +37,9 @@ library
     Assets.Common,
     Assets.FlocPath,
     Assets.AibTypes,
+    Assets.AibUniverse,
     Assets.S4Types,
+    Assets.S4Universe,
     Assets.InstallationToSite    
     
 

@@ -26,15 +26,16 @@ module Assets.InstallationToSite
     , installationToSite
     ) where
 
-import Control.Monad      
+-- import Control.Monad      
 
 import Language.KURE                    -- package: KURE
 
 -- import Assets.Facts.CodeMapping   
 -- import Assets.Facts.CodeNames
 import Assets.Facts.SiteNameMapping
--- import Assets.Common
+import Assets.Common
 import Assets.AibTypes
+import Assets.AibUniverse
 import qualified Assets.S4Types as S4
 
 type TransformE a b = Transform () KureM a b
@@ -46,30 +47,37 @@ applyTransform t = runKureM Right (Left . showKureExc) . applyT t mempty
 
 
 installationToSite :: TransformE AibInstallation S4.S4Site
-installationToSite = rootNode
+installationToSite = installation
 
 
-rootNode :: TransformE AibInstallation S4.S4Site
-rootNode = do 
+installation :: TransformE AibInstallation S4.S4Site
+installation = do 
     inst@AibInstallation {} <- idR
     info <- siteNameMapping (installation_ref inst)
-    let kids :: [AibInstallationKid] = installation_kids inst
-    (allfuns :: [S4.S4Function]) <- return [] -- aibInstallationT installationKid
+    allfuns <- aibInstallationT installationKid (\_ _ _ _ kids -> kids)
     return S4.S4Site 
               { S4.site_code           = floc1 info
               , S4.site_name           = site_name info
               , S4.site_attributes     = installation_attributes inst
-              , S4.site_kids           = {- S4.coalesceFunctions -} allfuns
+              , S4.site_kids           = S4.coalesceFunctions allfuns
               }
 
-
-installationKids :: TransformE [AibInstallationKid] [S4.S4Function]
-installationKids = do
-    return []
-
 installationKid :: TransformE AibInstallationKid S4.S4Function
-installationKid = do
-    fail "TODO"
+installationKid = 
+    installationKid_ProcessGroup <+ installationKid_Process
+  where
+    installationKid_ProcessGroup = installationKid_TEMP
+    installationKid_Process = installationKid_TEMP
+
+installationKid_TEMP :: TransformE AibInstallationKid S4.S4Function
+installationKid_TEMP = do
+    return S4.S4Function
+              { S4.function_floc_code      = "TODO"
+              , S4.function_code           = "TODO"
+              , S4.function_name           = "TODO"
+              , S4.function_attributes     = noAttrs
+              , S4.function_kids           = []
+              }
 
 {-
 generateS4ProcessNode level1code instType (procgKey, procNode) = 
