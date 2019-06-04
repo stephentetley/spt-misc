@@ -1,5 +1,5 @@
+{-# LANGUAGE InstanceSigs               #-}
 {-# OPTIONS -Wall #-}
-
 
 --------------------------------------------------------------------------------
 -- |
@@ -19,9 +19,21 @@
 
 module Assets.Common where
 
+import Control.Exception.Base 
+import qualified Data.Map as Map
+
+
 import Text.JSON                            -- package: json
 
-import qualified Data.Map as Map
+data LookupException = LookupException String
+    deriving (Eq, Show)
+
+instance Exception LookupException where
+    displayException :: LookupException -> String
+    displayException (LookupException msg) = "LookupException: " ++ msg
+
+
+
 
 type Attributes = Map.Map String AttrValue
 

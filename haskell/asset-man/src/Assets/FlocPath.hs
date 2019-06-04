@@ -30,9 +30,17 @@ module Assets.FlocPath
 import Language.KURE.Path               -- package: kure
 
 import Data.List
+import Data.Monoid
 
 newtype FlocPath = FlocPath { getFlocPath :: SnocPath String }
     deriving (Eq, Show)
+
+instance Semigroup FlocPath where
+    FlocPath a <> FlocPath b = FlocPath $ a <> b
+
+instance Monoid FlocPath where
+    mempty = FlocPath mempty    
+    FlocPath a `mappend` FlocPath b = FlocPath $ a <> b
 
 singleton :: String -> FlocPath 
 singleton s = FlocPath $ singletonSnocPath s

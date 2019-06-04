@@ -34,13 +34,14 @@ import Assets.Facts.CodeMapping
 -- import Assets.Facts.CodeNames
 import Assets.Facts.SiteNameMapping
 import Assets.Common
+import Assets.FlocPath
 import Assets.AibTypes
 import Assets.AibUniverse
 import qualified Assets.S4Types as S4
 
 -- TODO - context should be FlocCode
 
-type TransformE a b = Transform () KureM a b
+type TransformE a b = Transform FlocPath KureM a b
 type RewriteE a b = TransformE a b
 
 applyTransform :: TransformE a b -> a -> Either String b

@@ -96,10 +96,13 @@ module Assets.AibUniverse
 
     ) where
 
+import Control.Monad.Fail
 
 import Language.KURE                    -- package: kure
 
+import Assets.Facts.SiteNameMapping
 import Assets.Common
+import Assets.FlocPath
 import Assets.AibTypes
     
 -------------------------------------------------------------------------------
@@ -193,22 +196,26 @@ instance Injection AibUnknown AUniverse where
 -------------------------------------------------------------------------------
 -- KURE - congruence combinators
 
-aibInstallationT :: (MonadThrow m) 
-    => Transform c m AibInstallationKid a1 
+aibInstallationT :: MonadThrow m
+    => Transform FlocPath m AibInstallationKid a1 
     -> (String -> String -> String -> Attributes -> [a1] -> b) 
-    -> Transform c m AibInstallation b
-aibInstallationT t f = transform $ \c -> \case
-    AibInstallation ref name typ attrs kids -> 
-        f ref name typ attrs <$> mapM (\x -> applyT t c x) kids    
+    -> Transform FlocPath m AibInstallation b
+aibInstallationT t f = transform $ \cx -> \case
+    AibInstallation ref name typ attrs kids -> do
+        info <- siteNameMapping ref
+        let cx1 = cx @@ floc1 info
+        f ref name typ attrs <$> mapM (\x -> applyT t cx1 x) kids    
 
-aibInstallationAllR :: (MonadThrow m) 
-    => Rewrite c m AibInstallationKid -> Rewrite c m AibInstallation
+aibInstallationAllR :: MonadThrow m
+    => Rewrite FlocPath m AibInstallationKid -> Rewrite FlocPath m AibInstallation
 aibInstallationAllR r1 = aibInstallationT r1 AibInstallation
 
-aibInstallationAnyR :: (MonadCatch m) => Rewrite c m AibInstallationKid -> Rewrite c m AibInstallation
+aibInstallationAnyR :: MonadCatch m 
+    => Rewrite FlocPath m AibInstallationKid -> Rewrite FlocPath m AibInstallation
 aibInstallationAnyR r1 = unwrapAnyR $ aibInstallationAllR (wrapAnyR r1) 
 
-aibInstallationOneR :: (MonadCatch m) => Rewrite c m AibInstallationKid -> Rewrite c m AibInstallation
+aibInstallationOneR :: MonadCatch m
+    => Rewrite FlocPath m AibInstallationKid -> Rewrite FlocPath m AibInstallation
 aibInstallationOneR r1 = unwrapOneR $ aibInstallationAllR (wrapOneR r1) 
 
 -- For the Kid types, one set of congruence combinators for each constructor
@@ -539,8 +546,9 @@ aibUnknownT f = transform $ \_ -> \case
 -------------------------------------------------------------------------------
 -- KURE walker
 
-instance Walker c AUniverse where
-    allR :: MonadCatch m => Rewrite c m AUniverse -> Rewrite c m AUniverse
+instance Walker FlocPath AUniverse where
+    allR :: MonadCatch m
+        => Rewrite FlocPath m AUniverse -> Rewrite FlocPath m AUniverse
     allR r = 
             modExc (stackStrategyFailure "allR") $
             rewrite $ \ c -> \case
