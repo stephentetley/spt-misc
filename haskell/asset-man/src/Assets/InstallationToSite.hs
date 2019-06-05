@@ -31,9 +31,6 @@ import Control.Exception.Base
 import Language.KURE                    -- package: KURE
 
 import Assets.TranslateMonad
-import Assets.Facts.CodeMapping   
-import Assets.Facts.CodeNames
--- import Assets.Facts.SiteNameMapping
 import Assets.Common
 import Assets.TranslationRules
 import Assets.AibTypes
@@ -93,7 +90,7 @@ installationKid_ProcessGroup = withPatFailExc (strategyFailure "ProcessGroup") $
     AibInstallationKid_ProcessGroup kid <- idR
     CtxOne siteType <- contextT 
     let groupName = process_group_name kid
-    (funCode, _) <- codeMapping2 (siteType, groupName)
+    (funCode, _) <- return ("TODO", "NULL")      -- to fix, was: codeMapping2 (siteType, groupName)
     makeS4Function funCode
 
 installationKid_Process :: TransformE AibInstallationKid S4.S4Function  
@@ -101,12 +98,12 @@ installationKid_Process = withPatFailExc (strategyFailure "Process") $ do
     AibInstallationKid_Process kid <- idR
     CtxOne siteType <- contextT 
     let groupName = ""
-    (funCode, _) <- codeMapping2 (siteType, groupName)
+    (funCode, _) <- return ("TODO", "NULL")      -- to fix, was:  codeMapping2 (siteType, groupName)
     makeS4Function funCode
 
 makeS4Function :: MonadThrow m => String -> m S4.S4Function
 makeS4Function funCode = do
-    funName <- level2FunctionDescription funCode
+    funName <- return "TODO"      -- to fix, was: level2FunctionDescription funCode
     return $ S4.S4Function
         { S4.function_floc_code      = ""
         , S4.function_code           = funCode
@@ -120,8 +117,8 @@ processGroup = do
     group@AibProcessGroup {} <- idR
     let groupName = process_group_name group
     CtxOne siteType <- contextT
-    (_, pgCode) <- codeMapping2 (siteType, groupName)
-    pgDescr <- level3ProcessGroupDescription pgCode
+    (_, pgCode) <- return ("NULL", "NULL")
+    pgDescr <- return "TODO"      -- to fix, was: level3ProcessGroupDescription pgCode
     allprocs <- liftContext (push groupName) $ aibProcessGroupT processGroupKid (\_ _ _ kids -> kids)
 
     return $ S4.S4ProcessGroup 
@@ -144,8 +141,8 @@ process = do
     proc@AibProcess {} <- idR
     let procName = process_name proc
     CtxTwo siteType groupName <- contextT
-    (_, _, procCode) <- codeMapping3 (siteType, groupName, procName)
-    procDescr <- level4ProcessDescription procCode
+    (_, _, procCode) <- return (siteType, groupName, procName)      -- To Fix
+    procDescr <- return "TODO"      -- to fix, was: level4ProcessDescription procCode 
     return $ S4.S4Process
                 { S4.process_floc_code          = ""
                 , S4.process_code               = procCode
