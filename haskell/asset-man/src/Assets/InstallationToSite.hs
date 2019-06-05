@@ -26,10 +26,11 @@ module Assets.InstallationToSite
     , installationToSite
     ) where
 
--- import Control.Monad      
+import Control.Exception.Base   
 
 import Language.KURE                    -- package: KURE
 
+import Assets.TranslateMonad
 import Assets.Facts.CodeMapping   
 import Assets.Facts.CodeNames
 import Assets.Facts.SiteNameMapping
@@ -57,11 +58,11 @@ push _    full                  = full
 
 
 
-type TransformE a b = Transform Ctx KureM a b
+type TransformE a b = Transform Ctx (TranslateM ()) a b
 type RewriteE a b = TransformE a b
 
 applyTransform :: TransformE a b -> a -> Either String b
-applyTransform t = runKureM Right (Left . showKureExc) . applyT t CtxNone
+applyTransform t = runTranslateM () displayException . applyT t CtxNone
 
 
 

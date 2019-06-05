@@ -35,6 +35,7 @@ library
     Assets.Facts.CodeNames,
     Assets.Facts.SiteNameMapping,
     Assets.Common,
+    Assets.TranslateMonad,
     Assets.FlocPath,
     Assets.AibTypes,
     Assets.AibUniverse,

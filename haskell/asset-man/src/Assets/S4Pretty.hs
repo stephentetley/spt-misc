@@ -33,7 +33,7 @@ demo01 = drawTree $ Node "one" [Node "two" [], Node "three" []]
 
 
 type TransformE a b = Transform () KureM a b
-type RewriteE a b = TransformE a b
+
 
 applyTransform :: TransformE a b -> a -> Either String b
 applyTransform t = runKureM Right (Left . showKureExc) . applyT t ()
@@ -62,5 +62,38 @@ functionTree = do
 processGroupTree ::  TransformE S4ProcessGroup (Tree String)   
 processGroupTree = do
     procg@S4ProcessGroup {} <- idR
-    kids <- return []
+    kids <- s4ProcessGroupT processTree (\_ _ _ _ -> id)
     return $ Node (process_group_name procg) kids    
+
+
+processTree ::  TransformE S4Process (Tree String)   
+processTree = do
+    proc@S4Process {} <- idR
+    kids <- s4ProcessT systemTree (\_ _ _ _ -> id)
+    return $ Node (process_name proc) kids        
+
+
+
+systemTree ::  TransformE S4System (Tree String)   
+systemTree = do
+    sys@S4System {} <- idR
+    kids <- s4SystemT subsystemTree (\_ _ _ _ -> id)
+    return $ Node (system_name sys) kids        
+
+
+subsystemTree ::  TransformE S4Subsystem (Tree String)   
+subsystemTree = do
+    subsys@S4Subsystem {} <- idR
+    kids <- s4SubsystemT mainItemTree (\_ _ _ _ -> id)
+    return $ Node (subsystem_name subsys) kids 
+
+mainItemTree ::  TransformE S4MainItem (Tree String)   
+mainItemTree = do
+    item@S4MainItem {} <- idR
+    kids <- s4MainItemT componentTree (\_ _ _ _ -> id)
+    return $ Node (main_item_name item) kids 
+    
+componentTree ::  TransformE S4Component (Tree String)   
+componentTree = do
+    comp@S4Component {} <- idR
+    return $ Node (component_name comp) [] 
