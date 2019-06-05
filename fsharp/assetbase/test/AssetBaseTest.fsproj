@@ -5,6 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="GenSiteMapping12.fsx" />
+    <None Include="GenProcessMapping234.fsx" />
+    <None Include="GenProcessDescLookups.fsx" />
     <None Include="Test01.fsx" />
   </ItemGroup>
 
