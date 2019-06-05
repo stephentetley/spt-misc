@@ -53,7 +53,7 @@ installationToSite = installation
 
 
 installation :: TransformE AibInstallation S4.S4Site
-installation = do 
+installation = withPatFailExc (strategyFailure "installation") $ do 
     inst@AibInstallation {} <- idR
     info <- constT (getSiteFlocInfo (installation_ref inst))
     let instType = site_type info
@@ -67,35 +67,39 @@ installation = do
 
 installationKid :: String -> TransformE AibInstallationKid S4.S4Function
 installationKid instType = 
-    installationKid_ProcessGroup instType <+ installationKid_Process instType
+    promoteT (installationKid_ProcessGroup instType)  <+ promoteT (installationKid_Process instType) 
 
 installationKid_ProcessGroup :: String -> TransformE AibInstallationKid S4.S4Function      
-installationKid_ProcessGroup instType = withPatFailExc (strategyFailure "ProcessGroup") $ do
+installationKid_ProcessGroup instType = withPatFailExc (strategyFailure "installationKid_ProcessGroup") $ do
     AibInstallationKid_ProcessGroup kid <- idR
     let groupName = process_group_name kid
-    (funCode, _) <- return ("TODO", "NULL")      -- to fix, was: codeMapping2 (siteType, groupName)
-    constT $ makeS4Function funCode
+    (funCode, _) <- constT $ getProcessGroupFlocInfo instType groupName
+    procg <- aibInstallationKid_ProcessGroupT (processGroup instType) (\kids -> kids)
+    constT $ makeS4Function funCode [procg]
 
 installationKid_Process :: String -> TransformE AibInstallationKid S4.S4Function  
-installationKid_Process instType = withPatFailExc (strategyFailure "Process") $ do
-    AibInstallationKid_Process kid <- idR
+installationKid_Process instType = withPatFailExc (strategyFailure "installationKid_Process") $ do
+    AibInstallationKid_Process {} <- idR
     let groupName = "NULL"
-    (funCode, _) <- return ("TODO", "NULL")      -- to fix, was:  codeMapping2 (siteType, groupName)
-    constT $ makeS4Function funCode
+    (funCode, _) <- constT $ getProcessGroupFlocInfo instType groupName
+    constT $ makeS4Function funCode []
 
-makeS4Function :: String -> TranslateM S4.S4Function
-makeS4Function funCode = do
+catchall :: String -> TransformE AibInstallationKid S4.S4Function  
+catchall _ = constT $ makeS4Function "catchall" []
+
+makeS4Function :: String -> [S4.S4ProcessGroup] -> TranslateM S4.S4Function
+makeS4Function funCode procgs = do
     funName <- level2FunctionDescription funCode
     return $ S4.S4Function
         { S4.function_floc_code      = ""
         , S4.function_code           = funCode
         , S4.function_name           = funName
         , S4.function_attributes     = noAttrs
-        , S4.function_kids           = []
+        , S4.function_kids           = procgs
         }
 
 processGroup :: String -> TransformE AibProcessGroup S4.S4ProcessGroup
-processGroup instType = do
+processGroup instType = withPatFailExc (strategyFailure "processGroup") $ do
     group@AibProcessGroup {} <- idR
     let groupName = process_group_name group
     (_, pgCode) <- return ("NULL", "NULL")
@@ -118,7 +122,7 @@ processGroupKid_Process siteType groupName =
     aibProcessGroupKid_ProcessT (process siteType groupName) (\a -> a)
 
 process :: String -> String -> TransformE AibProcess S4.S4Process
-process siteType groupName = do
+process siteType groupName = withPatFailExc (strategyFailure "AibProcess") $ do
     proc@AibProcess {} <- idR
     let procName = process_name proc
     (_, _, procCode) <- constT $ getProcessFlocInfo siteType groupName procName

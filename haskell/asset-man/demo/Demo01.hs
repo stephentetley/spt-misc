@@ -27,6 +27,7 @@ import qualified Data.Map as Map
 import Assets.Common
 import Assets.FlocPath
 import Assets.AibTypes
+import Assets.AibPretty
 import Assets.S4Types
 import Assets.TranslationRules
 import Assets.TranslateMonad
@@ -65,7 +66,8 @@ demo01 = do
     let (aibResult::Result AibInstallation) = decodeStrict json
     case aibResult of
         Error errMsg -> error errMsg
-        Ok a1 -> 
+        Ok a1 -> do
+            writeFile "demo/output/aib_output_ald.txt" (aibDrawTree a1)
             case applyTransform env installationToSite a1 of
                 Left errMsg -> error errMsg
                 Right ans -> do

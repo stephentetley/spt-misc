@@ -2,7 +2,7 @@
 
 --------------------------------------------------------------------------------
 -- |
--- Module      :  Asset.S4Pretty
+-- Module      :  Asset.AibPretty
 -- Copyright   :  (c) Stephen Tetley 2019
 -- License     :  to be determined
 --
@@ -10,23 +10,24 @@
 -- Stability   :  unstable
 -- Portability :  GHC
 --
--- S4 Pretty print.
+-- Aib Pretty print.
 --
 --------------------------------------------------------------------------------
 
 
 
-module Assets.S4Pretty 
+module Assets.AibPretty 
     (
-        s4DrawTree  
+        aibDrawTree  
     ) where
 
 import Data.Tree
 
 import Language.KURE                    -- package: KURE
 
-import Assets.S4Types
-import Assets.S4Universe
+import Assets.AibTypes
+import Assets.AibUniverse
+
 
 
 type TransformE a b = Transform () KureM a b
@@ -37,29 +38,31 @@ applyTransform t = runKureM Right (Left . showKureExc) . applyT t ()
 
 
 
-s4DrawTree :: S4Site -> String
-s4DrawTree site = 
-    case applyTransform  siteTree site of
+aibDrawTree :: AibInstallation -> String
+aibDrawTree installation = 
+    case applyTransform  installationTree installation of
         Left err -> err
         Right tree -> drawTree tree
 
 
-siteTree :: TransformE S4Site (Tree String)
-siteTree = do
-    site@S4Site {} <- idR
-    kids <- s4SiteT functionTree (\_ _ _ -> id)
-    return $ Node (site_name site) kids
+installationTree :: TransformE AibInstallation (Tree String)
+installationTree = do
+    inst@AibInstallation {} <- idR
+    kids <- return [] -- s4SiteT functionTree (\_ _ _ -> id)
+    return $ Node (installation_name inst) kids
 
-functionTree ::  TransformE S4Function (Tree String)   
-functionTree = do
-    func@S4Function {} <- idR
-    kids <- s4FunctionT processGroupTree (\_ _ _ _ -> id)
+    {-
+installationTree_ProcessGroup ::  TransformE AibInstallationKid (Tree String)   
+installationTree_ProcessGroup = do
+    procg@AibInstallationKid_ProcessGroup {} <- idR
+    kids <- return [] -- s4FunctionT processGroupTree (\_ _ _ _ -> id)
     return $ Node (function_name func) kids
 
-processGroupTree ::  TransformE S4ProcessGroup (Tree String)   
+
+processGroupTree ::  TransformE AibProcessGroup (Tree String)   
 processGroupTree = do
-    procg@S4ProcessGroup {} <- idR
-    kids <- s4ProcessGroupT processTree (\_ _ _ _ -> id)
+    procg@AibProcessGroup {} <- idR
+    kids <- aibProcessGroupT processTree (\_ _ _ _ -> id)
     return $ Node (process_group_name procg) kids    
 
 
@@ -94,3 +97,5 @@ componentTree ::  TransformE S4Component (Tree String)
 componentTree = do
     comp@S4Component {} <- idR
     return $ Node (component_name comp) [] 
+
+-}    

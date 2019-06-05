@@ -26,6 +26,7 @@ module Assets.TranslateMonad
     ,   TranslateM
     ,   runTranslateM
     ,   getSiteFlocInfo
+    ,   getProcessGroupFlocInfo
     ,   getProcessFlocInfo
 
     ,   level2FunctionDescription
