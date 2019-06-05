@@ -100,7 +100,6 @@ import Control.Monad.Fail
 
 import Language.KURE                    -- package: kure
 
-import Assets.Facts.SiteNameMapping
 import Assets.Common
 import Assets.FlocPath
 import Assets.AibTypes

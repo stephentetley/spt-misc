@@ -24,7 +24,6 @@ import Language.KURE                    -- package: KURE
 import qualified Data.Map as Map
 -- import Data.List
 
-import Assets.Facts.SiteNameMapping
 import Assets.Common
 import Assets.FlocPath
 import Assets.AibTypes
@@ -46,8 +45,11 @@ demo0b :: String
 demo0b = toString $ singleton "ABB01" @@ "CAA" @@ "TEL"
 
 
-demo0c :: Maybe SiteDetails
-demo0c = siteNameMapping "SAI00001000"
+rulesConfig :: RulesConfig
+rulesConfig = RulesConfig
+    { path_to_levels_1_2_mapping_file    = "rules/aib_to_s4_level1_2.json"
+    , path_to_levels_2_3_4_mapping_file  = "rules/aib_to_s4_level2_3_4.json"
+    }
 
 
 
@@ -55,7 +57,7 @@ demo0c = siteNameMapping "SAI00001000"
 demo01 :: IO ()
 demo01 = do
     json <- readFile "data/aib_ald.json"
-    env <- loadRules "rules/aib_to_s4_level1_2.json"
+    env <- loadRules $ rulesConfig
     let (aibResult::Result AibInstallation) = decodeStrict json
     case aibResult of
         Error errMsg -> error errMsg

@@ -20,11 +20,12 @@
 
 module Assets.TranslateMonad
     (
-        Env(..)
+        RulesEnv(..)
+    ,   RulesConfig(..)
     ,   loadRules
     ,   TranslateM
     ,   runTranslateM
-    ,   siteFlocMappingInfo
+    ,   getSiteFlocInfo
     ) where
 
 import Prelude hiding ( fail )
@@ -48,18 +49,28 @@ instance Exception TranslateException where
 
 type Result a = Either SomeException a
 
-data Env = Env 
-    {   floc_mapping :: SiteFlocMapping
+data RulesEnv = RulesEnv 
+    {   site_floc_mapping       :: SiteFlocMapping
+    ,   process_floc_mapping    :: ProcessFlocMapping
     }
 
-loadRules :: FilePath -> IO Env
-loadRules flocMappingPath = do
-    floc_map <- readSiteFlocMapping flocMappingPath
-    return Env { floc_mapping = floc_map }
+data RulesConfig = RulesConfig
+    { path_to_levels_1_2_mapping_file    :: String
+    , path_to_levels_2_3_4_mapping_file  :: String
+    }
+
+loadRules :: RulesConfig -> IO RulesEnv
+loadRules config = do
+    site_floc_map <- readSiteFlocMapping (path_to_levels_1_2_mapping_file config)
+    proc_floc_map <- readProcessFlocMapping (path_to_levels_2_3_4_mapping_file config)
+    return $ RulesEnv  
+                { site_floc_mapping = site_floc_map
+                , process_floc_mapping = proc_floc_map 
+                }
 
 
 
-newtype TranslateM a = TranslateM { getTranslateM :: Env -> Result a }
+newtype TranslateM a = TranslateM { getTranslateM :: RulesEnv -> Result a }
 
 instance Functor TranslateM where
     fmap f ma = TranslateM $ \env -> f <$> getTranslateM ma env
@@ -91,13 +102,13 @@ instance MonadCatch TranslateM where
                         Right ans -> Right ans
 
 
-instance MonadReader Env TranslateM where
+instance MonadReader RulesEnv TranslateM where
     ask = TranslateM $ \env -> Right env
     local f ma = TranslateM $ \env -> getTranslateM ma (f env)
 
 
 -- | Eliminator for 'runTranslateM'.
-runTranslateM :: Env -> (SomeException -> String) -> TranslateM a -> Either String a
+runTranslateM :: RulesEnv -> (SomeException -> String) -> TranslateM a -> Either String a
 runTranslateM env fk ma = 
     case getTranslateM ma env of
         Left exc -> Left (fk exc)
@@ -106,9 +117,17 @@ runTranslateM env fk ma =
 
 
 
-siteFlocMappingInfo :: SaiNumber -> TranslateM SiteFlocInfo 
-siteFlocMappingInfo sai = do
-    dict <- asks floc_mapping
+getSiteFlocInfo :: SaiNumber -> TranslateM SiteFlocInfo 
+getSiteFlocInfo sai = do
+    dict <- asks site_floc_mapping
     case siteFlocMappingLookup sai dict of
         Nothing -> throwM (LookupException $ "no Site Mapping: " ++ sai)
+        Just ans -> return ans
+
+
+getProcessFlocInfo :: ProcessAibKey -> TranslateM ProcessFlocInfo 
+getProcessFlocInfo aibKey = do
+    dict <- asks process_floc_mapping
+    case processFlocMappingLookup aibKey dict of
+        Nothing -> throwM (LookupException $ "no Process Mapping: " ++ show aibKey)
         Just ans -> return ans
