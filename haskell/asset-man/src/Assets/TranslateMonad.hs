@@ -26,6 +26,10 @@ module Assets.TranslateMonad
     ,   TranslateM
     ,   runTranslateM
     ,   getSiteFlocInfo
+
+    ,   level2FunctionDescription
+    ,   level3FunctionDescription
+    ,   level4FunctionDescription
     ) where
 
 import Prelude hiding ( fail )
@@ -143,3 +147,26 @@ getProcessFlocInfo aibKey = do
     case processFlocMappingLookup aibKey dict of
         Nothing -> throwM (LookupException $ "no Process Mapping: " ++ show aibKey)
         Just ans -> return ans
+
+
+level2FunctionDescription :: String -> TranslateM String 
+level2FunctionDescription code = do
+    dict <- asks level_2_descriptions
+    case stringLookup code dict of
+        Nothing -> return $ "{" ++ code ++ "}"
+        Just ans -> return ans       
+
+
+level3FunctionDescription :: String -> TranslateM String 
+level3FunctionDescription code = do
+    dict <- asks level_3_descriptions
+    case stringLookup code dict of
+        Nothing -> return $ "{" ++ code ++ "}"
+        Just ans -> return ans   
+                
+level4FunctionDescription :: String -> TranslateM String 
+level4FunctionDescription code = do
+    dict <- asks level_4_descriptions
+    case stringLookup code dict of
+        Nothing -> return $ "{" ++ code ++ "}"
+        Just ans -> return ans           

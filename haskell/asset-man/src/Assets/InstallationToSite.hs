@@ -91,7 +91,7 @@ installationKid_ProcessGroup = withPatFailExc (strategyFailure "ProcessGroup") $
     CtxOne siteType <- contextT 
     let groupName = process_group_name kid
     (funCode, _) <- return ("TODO", "NULL")      -- to fix, was: codeMapping2 (siteType, groupName)
-    makeS4Function funCode
+    constT $ makeS4Function funCode
 
 installationKid_Process :: TransformE AibInstallationKid S4.S4Function  
 installationKid_Process = withPatFailExc (strategyFailure "Process") $ do
@@ -99,11 +99,11 @@ installationKid_Process = withPatFailExc (strategyFailure "Process") $ do
     CtxOne siteType <- contextT 
     let groupName = ""
     (funCode, _) <- return ("TODO", "NULL")      -- to fix, was:  codeMapping2 (siteType, groupName)
-    makeS4Function funCode
+    constT $ makeS4Function funCode
 
-makeS4Function :: MonadThrow m => String -> m S4.S4Function
+makeS4Function :: String -> TranslateM S4.S4Function
 makeS4Function funCode = do
-    funName <- return "TODO"      -- to fix, was: level2FunctionDescription funCode
+    funName <- level2FunctionDescription funCode
     return $ S4.S4Function
         { S4.function_floc_code      = ""
         , S4.function_code           = funCode
