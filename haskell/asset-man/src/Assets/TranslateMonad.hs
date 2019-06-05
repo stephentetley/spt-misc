@@ -52,20 +52,32 @@ type Result a = Either SomeException a
 data RulesEnv = RulesEnv 
     {   site_floc_mapping       :: SiteFlocMapping
     ,   process_floc_mapping    :: ProcessFlocMapping
+    ,   level_2_descriptions    :: StringDictionary
+    ,   level_3_descriptions    :: StringDictionary
+    ,   level_4_descriptions    :: StringDictionary
     }
 
 data RulesConfig = RulesConfig
-    { path_to_levels_1_2_mapping_file    :: String
-    , path_to_levels_2_3_4_mapping_file  :: String
+    { path_to_levels_1_2_mapping_file       :: String
+    , path_to_levels_2_3_4_mapping_file     :: String
+    , path_to_level_2_descriptions          :: String
+    , path_to_level_3_descriptions          :: String
+    , path_to_level_4_descriptions          :: String
     }
 
 loadRules :: RulesConfig -> IO RulesEnv
 loadRules config = do
-    site_floc_map <- readSiteFlocMapping (path_to_levels_1_2_mapping_file config)
-    proc_floc_map <- readProcessFlocMapping (path_to_levels_2_3_4_mapping_file config)
+    site_floc_map   <- readSiteFlocMapping (path_to_levels_1_2_mapping_file config)
+    proc_floc_map   <- readProcessFlocMapping (path_to_levels_2_3_4_mapping_file config)
+    lev2_descrs     <- readStringDictionary (path_to_level_2_descriptions config)
+    lev3_descrs     <- readStringDictionary (path_to_level_3_descriptions config)
+    lev4_descrs     <- readStringDictionary (path_to_level_4_descriptions config)
     return $ RulesEnv  
-                { site_floc_mapping = site_floc_map
-                , process_floc_mapping = proc_floc_map 
+                { site_floc_mapping         = site_floc_map
+                , process_floc_mapping      = proc_floc_map 
+                , level_2_descriptions      = lev2_descrs 
+                , level_3_descriptions      = lev3_descrs 
+                , level_4_descriptions      = lev4_descrs
                 }
 
 

@@ -32,6 +32,10 @@ module Assets.TranslationRules
     ,   readProcessFlocMapping
     ,   processFlocMappingLookup
 
+    ,   StringDictionary
+    ,   readStringDictionary
+    ,   stringLookup
+
     ) where
 
 
@@ -167,3 +171,39 @@ readProcessFlocInfo (JSObject obj) =
                     
 
 readProcessFlocInfo _ = Error "Not a JSObject" 
+
+
+
+--------------------------------------------------------------------------------
+-- String Dict
+
+-- JS Array of Object 
+
+
+newtype StringDictionary = StringDictionary 
+    { stringDict :: Map.Map String String }
+
+
+
+
+readStringDictionary :: FilePath -> IO StringDictionary
+readStringDictionary path = readMapping path   
+
+
+stringLookup :: String -> StringDictionary -> Maybe String
+stringLookup key dict = Map.lookup key (stringDict dict)
+
+instance JSON StringDictionary where
+    readJSON (JSArray xs) = 
+        (StringDictionary . Map.fromList) <$> mapM readKeyValue1 xs
+    
+    readJSON _ = Error "Not a JSArray" 
+
+    showJSON _ = error "showJSON not supported"
+
+readKeyValue1 :: JSValue -> Result (String, String)
+readKeyValue1 (JSObject obj) = 
+    (,) <$> readField "key"  readJSONString obj
+        <*> readField "val"  readJSONString obj 
+
+readKeyValue1 _ = Error "Not a JSObject"

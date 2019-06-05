@@ -47,8 +47,11 @@ demo0b = toString $ singleton "ABB01" @@ "CAA" @@ "TEL"
 
 rulesConfig :: RulesConfig
 rulesConfig = RulesConfig
-    { path_to_levels_1_2_mapping_file    = "rules/aib_to_s4_level1_2.json"
-    , path_to_levels_2_3_4_mapping_file  = "rules/aib_to_s4_level2_3_4.json"
+    { path_to_levels_1_2_mapping_file       = "rules/aib_to_s4_level1_2.json"
+    , path_to_levels_2_3_4_mapping_file     = "rules/aib_to_s4_level2_3_4.json"
+    , path_to_level_2_descriptions          = "rules/level2_descriptions.json"
+    , path_to_level_3_descriptions          = "rules/level3_descriptions.json"
+    , path_to_level_4_descriptions          = "rules/level4_descriptions.json"
     }
 
 
