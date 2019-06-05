@@ -32,6 +32,12 @@ module Assets.TranslationRules
     ,   readProcessFlocMapping
     ,   processFlocMappingLookup
 
+    ,   ProcessGroupFlocMapping
+    ,   ProcessGroupAibKey(..)
+    ,   ProcessGroupFlocInfo(..)
+    ,   readProcessGroupFlocMapping
+    ,   processGroupFlocMappingLookup
+
     ,   StringDictionary
     ,   readStringDictionary
     ,   stringLookup
@@ -112,20 +118,20 @@ readJSONString = readJSON
 -- Processes (L2, L3, L4)
 
 newtype ProcessFlocMapping  = ProcessFlocMapping 
-    { procMapping :: Map.Map ProcessAibKey ProcessFlocInfo }
+    { procMapping234 :: Map.Map ProcessAibKey ProcessFlocInfo }
 
 
 data ProcessAibKey = ProcessAibKey 
-    { inst_type                 :: !String
-    , proc_group_description    :: !String
-    , proc_description          :: !String
+    { key234_inst_type                 :: !String
+    , key234_proc_group_description    :: !String
+    , key234_proc_description          :: !String
     }
     deriving (Eq, Ord, Show)
 
 data ProcessFlocInfo = ProcessFlocInfo 
-    { proc_level2_code          :: !String
-    , proc_level3_code          :: !String
-    , proc_level4_code          :: !String
+    { info234_level2_code          :: !String
+    , info234_level3_code          :: !String
+    , info234_level4_code          :: !String
     }
     deriving (Eq, Ord, Show)
 
@@ -136,7 +142,7 @@ readProcessFlocMapping path = readMapping path
 
 
 processFlocMappingLookup :: ProcessAibKey -> ProcessFlocMapping -> Maybe ProcessFlocInfo
-processFlocMappingLookup aibKey dict = Map.lookup aibKey (procMapping dict)
+processFlocMappingLookup aibKey dict = Map.lookup aibKey (procMapping234 dict)
 
 
 instance JSON ProcessFlocMapping where
@@ -173,6 +179,65 @@ readProcessFlocInfo (JSObject obj) =
 readProcessFlocInfo _ = Error "Not a JSObject" 
 
 
+--------------------------------------------------------------------------------
+-- Processes (L2, L3)
+
+newtype ProcessGroupFlocMapping  = ProcessGroupFlocMapping 
+    { procMapping23 :: Map.Map ProcessGroupAibKey ProcessGroupFlocInfo }
+
+
+data ProcessGroupAibKey = ProcessGroupAibKey 
+    { key23_inst_type                 :: !String
+    , key23_proc_group_description    :: !String
+    }
+    deriving (Eq, Ord, Show)
+
+data ProcessGroupFlocInfo = ProcessGroupFlocInfo 
+    { info23_level2_code          :: !String
+    , info23_level3_code          :: !String
+    }
+    deriving (Eq, Ord, Show)
+
+
+
+readProcessGroupFlocMapping :: FilePath -> IO ProcessGroupFlocMapping
+readProcessGroupFlocMapping path = readMapping path    
+
+
+processGroupFlocMappingLookup :: ProcessGroupAibKey -> ProcessGroupFlocMapping -> Maybe ProcessGroupFlocInfo
+processGroupFlocMappingLookup aibKey dict = Map.lookup aibKey (procMapping23 dict)
+
+
+instance JSON ProcessGroupFlocMapping where
+    readJSON :: JSValue -> Result ProcessGroupFlocMapping
+    readJSON (JSArray xs) =
+        (ProcessGroupFlocMapping . Map.fromList) <$> mapM readProcessGroupMapping1 xs
+
+    readJSON _ = Error "Not a JSArray" 
+
+    showJSON _ = error "showJSON not supported"
+
+readProcessGroupMapping1 :: JSValue -> Result (ProcessGroupAibKey, ProcessGroupFlocInfo) 
+readProcessGroupMapping1 (JSObject obj) =
+    (,) <$> readField "aib"     readProcessGroupAibKey       obj
+        <*> readField "s4"      readProcessGroupFlocInfo     obj
+
+readProcessGroupMapping1 _ = Error "Not a JSObject"  
+
+readProcessGroupAibKey :: JSValue -> Result ProcessGroupAibKey
+readProcessGroupAibKey (JSObject obj) = 
+    ProcessGroupAibKey  <$> readField "instType"        readJSONString obj
+                        <*> readField "progGroupDesc"   readJSONString obj
+
+readProcessGroupAibKey _ = Error "Not a JSObject" 
+
+readProcessGroupFlocInfo :: JSValue -> Result ProcessGroupFlocInfo
+readProcessGroupFlocInfo (JSObject obj) = 
+    ProcessGroupFlocInfo    <$> readField "level2Floc"  readJSONString obj
+                            <*> readField "level3Floc"  readJSONString obj
+                    
+
+readProcessGroupFlocInfo _ = Error "Not a JSObject" 
 
 --------------------------------------------------------------------------------
 -- String Dict

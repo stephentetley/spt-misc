@@ -79,7 +79,7 @@ installationKid_ProcessGroup instType = withPatFailExc (strategyFailure "Process
 installationKid_Process :: String -> TransformE AibInstallationKid S4.S4Function  
 installationKid_Process instType = withPatFailExc (strategyFailure "Process") $ do
     AibInstallationKid_Process kid <- idR
-    let groupName = ""
+    let groupName = "NULL"
     (funCode, _) <- return ("TODO", "NULL")      -- to fix, was:  codeMapping2 (siteType, groupName)
     constT $ makeS4Function funCode
 

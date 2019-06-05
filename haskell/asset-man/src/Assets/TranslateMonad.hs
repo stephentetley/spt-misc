@@ -55,8 +55,9 @@ instance Exception TranslateException where
 type Result a = Either SomeException a
 
 data RulesEnv = RulesEnv 
-    {   site_floc_mapping       :: SiteFlocMapping
-    ,   process_floc_mapping    :: ProcessFlocMapping
+    {   floc_1_2_mapping        :: SiteFlocMapping
+    ,   floc_2_3_mapping        :: ProcessGroupFlocMapping
+    ,   floc_2_3_4_mapping      :: ProcessFlocMapping
     ,   level_2_descriptions    :: StringDictionary
     ,   level_3_descriptions    :: StringDictionary
     ,   level_4_descriptions    :: StringDictionary
@@ -64,6 +65,7 @@ data RulesEnv = RulesEnv
 
 data RulesConfig = RulesConfig
     { path_to_levels_1_2_mapping_file       :: String
+    , path_to_levels_2_3_mapping_file       :: String
     , path_to_levels_2_3_4_mapping_file     :: String
     , path_to_level_2_descriptions          :: String
     , path_to_level_3_descriptions          :: String
@@ -72,14 +74,16 @@ data RulesConfig = RulesConfig
 
 loadRules :: RulesConfig -> IO RulesEnv
 loadRules config = do
-    site_floc_map   <- readSiteFlocMapping (path_to_levels_1_2_mapping_file config)
-    proc_floc_map   <- readProcessFlocMapping (path_to_levels_2_3_4_mapping_file config)
-    lev2_descrs     <- readStringDictionary (path_to_level_2_descriptions config)
-    lev3_descrs     <- readStringDictionary (path_to_level_3_descriptions config)
-    lev4_descrs     <- readStringDictionary (path_to_level_4_descriptions config)
+    site_floc_map       <- readSiteFlocMapping (path_to_levels_1_2_mapping_file config)
+    proc_group_floc_map <- readProcessGroupFlocMapping (path_to_levels_2_3_mapping_file config)
+    proc_floc_map       <- readProcessFlocMapping (path_to_levels_2_3_4_mapping_file config)
+    lev2_descrs         <- readStringDictionary (path_to_level_2_descriptions config)
+    lev3_descrs         <- readStringDictionary (path_to_level_3_descriptions config)
+    lev4_descrs         <- readStringDictionary (path_to_level_4_descriptions config)
     return $ RulesEnv  
-                { site_floc_mapping         = site_floc_map
-                , process_floc_mapping      = proc_floc_map 
+                { floc_1_2_mapping          = site_floc_map
+                , floc_2_3_4_mapping        = proc_floc_map 
+                , floc_2_3_mapping          = proc_group_floc_map
                 , level_2_descriptions      = lev2_descrs 
                 , level_3_descriptions      = lev3_descrs 
                 , level_4_descriptions      = lev4_descrs
@@ -136,24 +140,36 @@ runTranslateM env fk ma =
 
 getSiteFlocInfo :: SaiNumber -> TranslateM SiteFlocInfo 
 getSiteFlocInfo sai = do
-    dict <- asks site_floc_mapping
+    dict <- asks floc_1_2_mapping
     case siteFlocMappingLookup sai dict of
         Nothing -> throwM (LookupException $ "no Site Mapping: " ++ sai)
         Just ans -> return ans
 
 
+getProcessGroupFlocInfo :: String -> String -> TranslateM (String, String) 
+getProcessGroupFlocInfo instType groupName = do
+    let aibKey = ProcessGroupAibKey 
+                    { key23_inst_type                 = instType
+                    , key23_proc_group_description    = groupName
+                    }
+
+    dict <- asks floc_2_3_mapping
+    case processGroupFlocMappingLookup aibKey dict of
+        Nothing -> throwM (LookupException $ "no Process Group Mapping: " ++ show aibKey)
+        Just ans -> return ( info23_level2_code ans, info23_level3_code ans )
+
 getProcessFlocInfo :: String -> String -> String -> TranslateM (String, String, String) 
 getProcessFlocInfo instType groupName procName = do
     let aibKey = ProcessAibKey 
-                    { inst_type                 = instType
-                    , proc_group_description    = groupName
-                    , proc_description          = procName
+                    { key234_inst_type                 = instType
+                    , key234_proc_group_description    = groupName
+                    , key234_proc_description          = procName
                     }
 
-    dict <- asks process_floc_mapping
+    dict <- asks floc_2_3_4_mapping
     case processFlocMappingLookup aibKey dict of
         Nothing -> throwM (LookupException $ "no Process Mapping: " ++ show aibKey)
-        Just ans -> return ( proc_level2_code ans, proc_level3_code ans, proc_level4_code ans )
+        Just ans -> return ( info234_level2_code ans, info234_level3_code ans, info234_level4_code ans )
 
 
 level2FunctionDescription :: String -> TranslateM String 
