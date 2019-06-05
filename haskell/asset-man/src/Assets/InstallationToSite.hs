@@ -33,8 +33,9 @@ import Language.KURE                    -- package: KURE
 import Assets.TranslateMonad
 import Assets.Facts.CodeMapping   
 import Assets.Facts.CodeNames
-import Assets.Facts.SiteNameMapping
+-- import Assets.Facts.SiteNameMapping
 import Assets.Common
+import Assets.TranslationRules
 import Assets.AibTypes
 import Assets.AibUniverse
 import qualified Assets.S4Types as S4
@@ -58,11 +59,12 @@ push _    full                  = full
 
 
 
-type TransformE a b = Transform Ctx (TranslateM ()) a b
+
+type TransformE a b = Transform Ctx TranslateM a b
 type RewriteE a b = TransformE a b
 
-applyTransform :: TransformE a b -> a -> Either String b
-applyTransform t = runTranslateM () displayException . applyT t CtxNone
+applyTransform :: Env -> TransformE a b -> a -> Either String b
+applyTransform env t = runTranslateM env displayException . applyT t CtxNone
 
 
 
@@ -73,12 +75,12 @@ installationToSite = installation
 installation :: TransformE AibInstallation S4.S4Site
 installation = do 
     inst@AibInstallation {} <- idR
-    info <- siteNameMapping (installation_ref inst)
+    info <- constT (siteFlocMappingInfo (installation_ref inst))
     let siteType = site_type info
     allfuns <- liftContext (push siteType) $ aibInstallationT installationKid (\_ _ _ _ kids -> kids)
     return S4.S4Site 
-              { S4.site_code           = floc1 info
-              , S4.site_name           = site_name info
+              { S4.site_code           = level1_code info
+              , S4.site_name           = s4_name info
               , S4.site_attributes     = installation_attributes inst
               , S4.site_kids           = S4.coalesceFunctions allfuns
               }

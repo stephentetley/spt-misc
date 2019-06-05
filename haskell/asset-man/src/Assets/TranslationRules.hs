@@ -1,3 +1,4 @@
+{-# LANGUAGE InstanceSigs               #-}
 {-# OPTIONS -Wall #-}
 
 --------------------------------------------------------------------------------
@@ -17,9 +18,16 @@
 --------------------------------------------------------------------------------
 
 
-module Assets.TranslationRules where
+module Assets.TranslationRules 
+    (
+        SaiNumber
+    ,   SiteFlocInfo(..)
+    ,   SiteFlocMapping
+    ,   readSiteFlocMapping
+    ,   siteFlocMappingLookup
+    ) where
 
-import Control.Monad.Reader.Class
+
 import qualified Data.Map as Map
 
 import Language.KURE.MonadCatch         -- package: KURE
@@ -27,7 +35,10 @@ import Text.JSON                        -- package: json
 
 import Assets.Common
 
-data FlocInfo = FlocInfo 
+type SaiNumber = String 
+
+
+data SiteFlocInfo = SiteFlocInfo 
     { site_type             :: String
     , s4_name               :: String
     , level1_code           :: String
@@ -35,30 +46,43 @@ data FlocInfo = FlocInfo
     }
     deriving (Eq, Ord, Show)
 
-type SaiNumber = String 
 
-type FlocMapping  = Map.Map SaiNumber FlocInfo
+newtype SiteFlocMapping  = SiteFlocMapping { flocMapping :: Map.Map SaiNumber SiteFlocInfo }
 
-readFlocMapping :: JSValue -> Result FlocMapping
-readFlocMapping (JSArray xs) =
-    Map.fromList <$> mapM readPair xs
+readSiteFlocMapping :: FilePath -> IO SiteFlocMapping
+readSiteFlocMapping path = do
+    json <- readFile path
+    case decode json of
+        Ok a -> return a
+        Error msg -> error msg
 
-readFlocMapping _ = Error "Not a JSArray" 
+siteFlocMappingLookup :: SaiNumber -> SiteFlocMapping -> Maybe SiteFlocInfo
+siteFlocMappingLookup sai dict = Map.lookup sai (flocMapping dict)
+
+
+instance JSON SiteFlocMapping where
+    readJSON :: JSValue -> Result SiteFlocMapping
+    readJSON (JSArray xs) =
+        (SiteFlocMapping . Map.fromList) <$> mapM readSiteFlocPair xs
+
+    readJSON _ = Error "Not a JSArray" 
+
+    showJSON _ = error "showJSON not supported"
     
 
-readPair :: JSValue -> Result (SaiNumber, FlocInfo)
-readPair (JSObject obj) = do 
-    (,) <$> readField "sai"        readJSONString  obj
-        <*> readField  "flocInfo"  readFlocInfo    obj
+readSiteFlocPair :: JSValue -> Result (SaiNumber, SiteFlocInfo)
+readSiteFlocPair (JSObject obj) = do 
+    (,) <$> readField "sai"        readJSONString       obj
+        <*> readField  "flocInfo"  readSiteFlocInfo     obj
 
-readPair _ = Error "Not a JSObject"  
+readSitePair _ = Error "Not a JSObject"  
 
-readFlocInfo :: JSValue -> Result FlocInfo
-readFlocInfo (JSObject obj) = do 
-    FlocInfo    <$> readField "type"        readJSONString obj
-                <*> readField "s4Name"      readJSONString obj
-                <*> readField "level1Code"  readJSONString obj
-                <*> readField "level2Code"  readJSONString obj
+readSiteFlocInfo :: JSValue -> Result SiteFlocInfo
+readSiteFlocInfo (JSObject obj) = do 
+    SiteFlocInfo    <$> readField "type"        readJSONString obj
+                    <*> readField "s4Name"      readJSONString obj
+                    <*> readField "level1Code"  readJSONString obj
+                    <*> readField "level2Code"  readJSONString obj
 
 readFlocInfo _ = Error "Not a JSObject" 
 
@@ -68,14 +92,4 @@ readField name parser obj = valFromObj name obj >>= parser
 readJSONString :: JSValue -> Result String
 readJSONString = readJSON
 
-class HasFlocMapping env where
-    getFlocMapping :: env -> FlocMapping
-
-flocMappingInfo :: (HasFlocMapping env, MonadReader env m, MonadThrow m)
-    => SaiNumber -> m FlocInfo 
-flocMappingInfo sai = do
-    dict <- asks getFlocMapping
-    case Map.lookup sai dict of
-        Nothing -> throwM (LookupException $ "no Site Mapping: " ++ sai)
-        Just ans -> return ans
 

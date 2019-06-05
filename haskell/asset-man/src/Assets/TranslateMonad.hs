@@ -13,24 +13,30 @@
 -- Stability   :  unstable
 -- Portability :  GHC
 --
--- FlocPath
+-- TranslateMonad
 --
 --------------------------------------------------------------------------------
 
 
 module Assets.TranslateMonad
     (
-        TranslateM
+        Env(..)
+    ,   loadRules
+    ,   TranslateM
     ,   runTranslateM
+    ,   siteFlocMappingInfo
     ) where
 
 import Prelude hiding ( fail )
 import Control.Exception        
 import Control.Monad.Fail
 import Control.Monad.Reader.Class
+import qualified Data.Map as Map
 
 import Language.KURE.MonadCatch         -- package: KURE
 
+import Assets.Common
+import Assets.TranslationRules
 
 data TranslateException = TranslateException String
     deriving (Eq, Show)
@@ -42,29 +48,40 @@ instance Exception TranslateException where
 
 type Result a = Either SomeException a
 
-newtype TranslateM env a = TranslateM { getTranslateM :: env -> Result a }
+data Env = Env 
+    {   floc_mapping :: SiteFlocMapping
+    }
 
-instance Functor (TranslateM env) where
+loadRules :: FilePath -> IO Env
+loadRules flocMappingPath = do
+    floc_map <- readSiteFlocMapping flocMappingPath
+    return Env { floc_mapping = floc_map }
+
+
+
+newtype TranslateM a = TranslateM { getTranslateM :: Env -> Result a }
+
+instance Functor TranslateM where
     fmap f ma = TranslateM $ \env -> f <$> getTranslateM ma env
 
-instance Applicative (TranslateM env) where
+instance Applicative TranslateM where
     pure a = TranslateM $ \_ -> pure a
     mf <*> ma = TranslateM $ \env -> getTranslateM mf env <*> getTranslateM ma env
 
-instance Monad (TranslateM env) where
+instance Monad TranslateM where
     ma >>= k = TranslateM $ \env -> 
                     getTranslateM ma env >>= \ans -> getTranslateM (k ans) env
 
-instance MonadFail (TranslateM env) where
-    fail :: String -> TranslateM env a
+instance MonadFail TranslateM where
+    fail :: String -> TranslateM a
     fail msg = TranslateM $ \_ -> Left $ SomeException $ TranslateException msg 
 
-instance MonadThrow (TranslateM env) where
-    throwM :: Exception e => e -> TranslateM env a
+instance MonadThrow TranslateM where
+    throwM :: Exception e => e -> TranslateM a
     throwM exc = TranslateM $ \_ -> Left $ toException exc
 
-instance MonadCatch  (TranslateM env) where
-    catch :: Exception exc => TranslateM env a -> (exc -> TranslateM env a) -> TranslateM env a    
+instance MonadCatch TranslateM where
+    catch :: Exception exc => TranslateM a -> (exc -> TranslateM a) -> TranslateM a    
     catch ma f = TranslateM $ \env -> 
                     case getTranslateM ma env of
                         Left e1 -> 
@@ -74,14 +91,24 @@ instance MonadCatch  (TranslateM env) where
                         Right ans -> Right ans
 
 
-instance MonadReader env (TranslateM env) where
+instance MonadReader Env TranslateM where
     ask = TranslateM $ \env -> Right env
     local f ma = TranslateM $ \env -> getTranslateM ma (f env)
-    
+
 
 -- | Eliminator for 'runTranslateM'.
-runTranslateM :: env -> (SomeException -> String) -> TranslateM env a -> Either String a
+runTranslateM :: Env -> (SomeException -> String) -> TranslateM a -> Either String a
 runTranslateM env fk ma = 
     case getTranslateM ma env of
         Left exc -> Left (fk exc)
         Right ans -> Right ans
+
+
+
+
+siteFlocMappingInfo :: SaiNumber -> TranslateM SiteFlocInfo 
+siteFlocMappingInfo sai = do
+    dict <- asks floc_mapping
+    case siteFlocMappingLookup sai dict of
+        Nothing -> throwM (LookupException $ "no Site Mapping: " ++ sai)
+        Just ans -> return ans

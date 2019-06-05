@@ -30,6 +30,7 @@ import Assets.FlocPath
 import Assets.AibTypes
 import Assets.S4Types
 import Assets.TranslationRules
+import Assets.TranslateMonad
 import Assets.InstallationToSite
 import qualified Assets.S4Pretty as S4
 
@@ -54,11 +55,12 @@ demo0c = siteNameMapping "SAI00001000"
 demo01 :: IO ()
 demo01 = do
     json <- readFile "data/aib_ald.json"
+    env <- loadRules "rules/aib_to_s4_level1_2.json"
     let (aibResult::Result AibInstallation) = decodeStrict json
     case aibResult of
         Error errMsg -> error errMsg
         Ok a1 -> 
-            case applyTransform installationToSite a1 of
+            case applyTransform env installationToSite a1 of
                 Left errMsg -> error errMsg
                 Right ans -> do
                     let output = encode ans 
