@@ -26,10 +26,11 @@ module Assets.TranslateMonad
     ,   TranslateM
     ,   runTranslateM
     ,   getSiteFlocInfo
+    ,   getProcessFlocInfo
 
     ,   level2FunctionDescription
-    ,   level3FunctionDescription
-    ,   level4FunctionDescription
+    ,   level3ProcessGroupDescription
+    ,   level4ProcessDescription
     ) where
 
 import Prelude hiding ( fail )
@@ -141,12 +142,18 @@ getSiteFlocInfo sai = do
         Just ans -> return ans
 
 
-getProcessFlocInfo :: ProcessAibKey -> TranslateM ProcessFlocInfo 
-getProcessFlocInfo aibKey = do
+getProcessFlocInfo :: String -> String -> String -> TranslateM (String, String, String) 
+getProcessFlocInfo instType groupName procName = do
+    let aibKey = ProcessAibKey 
+                    { inst_type                 = instType
+                    , proc_group_description    = groupName
+                    , proc_description          = procName
+                    }
+
     dict <- asks process_floc_mapping
     case processFlocMappingLookup aibKey dict of
         Nothing -> throwM (LookupException $ "no Process Mapping: " ++ show aibKey)
-        Just ans -> return ans
+        Just ans -> return ( proc_level2_code ans, proc_level3_code ans, proc_level4_code ans )
 
 
 level2FunctionDescription :: String -> TranslateM String 
@@ -157,15 +164,15 @@ level2FunctionDescription code = do
         Just ans -> return ans       
 
 
-level3FunctionDescription :: String -> TranslateM String 
-level3FunctionDescription code = do
+level3ProcessGroupDescription :: String -> TranslateM String 
+level3ProcessGroupDescription code = do
     dict <- asks level_3_descriptions
     case stringLookup code dict of
         Nothing -> return $ "{" ++ code ++ "}"
         Just ans -> return ans   
                 
-level4FunctionDescription :: String -> TranslateM String 
-level4FunctionDescription code = do
+level4ProcessDescription :: String -> TranslateM String 
+level4ProcessDescription code = do
     dict <- asks level_4_descriptions
     case stringLookup code dict of
         Nothing -> return $ "{" ++ code ++ "}"

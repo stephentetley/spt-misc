@@ -38,30 +38,13 @@ import Assets.AibUniverse
 import qualified Assets.S4Types as S4
 
 
-data Ctx 
-    = CtxNone
-    | CtxOne    String                    -- Site
-    | CtxTwo    String  String            -- Site x ProcGroup
-    | CtxThree  String  String  String    -- Site x ProcGroup x Proc
 
 
-
-push :: String -> Ctx -> Ctx
-push item (CtxNone)             = CtxOne item
-push item (CtxOne site)         = CtxTwo site item
-push item (CtxTwo site pgrp)    = CtxThree site pgrp item
-push _    full                  = full
-
-
-
-
-
-
-type TransformE a b = Transform Ctx TranslateM a b
+type TransformE a b = Transform () TranslateM a b
 type RewriteE a b = TransformE a b
 
 applyTransform :: RulesEnv -> TransformE a b -> a -> Either String b
-applyTransform env t = runTranslateM env displayException . applyT t CtxNone
+applyTransform env t = runTranslateM env displayException . applyT t ()
 
 
 
@@ -73,8 +56,8 @@ installation :: TransformE AibInstallation S4.S4Site
 installation = do 
     inst@AibInstallation {} <- idR
     info <- constT (getSiteFlocInfo (installation_ref inst))
-    let siteType = site_type info
-    allfuns <- liftContext (push siteType) $ aibInstallationT installationKid (\_ _ _ _ kids -> kids)
+    let instType = site_type info
+    allfuns <- aibInstallationT (installationKid instType) (\_ _ _ _ kids -> kids)
     return S4.S4Site 
               { S4.site_code           = site_level1_code info
               , S4.site_name           = site_s4_name info
@@ -82,21 +65,20 @@ installation = do
               , S4.site_kids           = S4.coalesceFunctions allfuns
               }
 
-installationKid :: TransformE AibInstallationKid S4.S4Function
-installationKid = installationKid_ProcessGroup <+ installationKid_Process
+installationKid :: String -> TransformE AibInstallationKid S4.S4Function
+installationKid instType = 
+    installationKid_ProcessGroup instType <+ installationKid_Process instType
 
-installationKid_ProcessGroup :: TransformE AibInstallationKid S4.S4Function      
-installationKid_ProcessGroup = withPatFailExc (strategyFailure "ProcessGroup") $ do
+installationKid_ProcessGroup :: String -> TransformE AibInstallationKid S4.S4Function      
+installationKid_ProcessGroup instType = withPatFailExc (strategyFailure "ProcessGroup") $ do
     AibInstallationKid_ProcessGroup kid <- idR
-    CtxOne siteType <- contextT 
     let groupName = process_group_name kid
     (funCode, _) <- return ("TODO", "NULL")      -- to fix, was: codeMapping2 (siteType, groupName)
     constT $ makeS4Function funCode
 
-installationKid_Process :: TransformE AibInstallationKid S4.S4Function  
-installationKid_Process = withPatFailExc (strategyFailure "Process") $ do
+installationKid_Process :: String -> TransformE AibInstallationKid S4.S4Function  
+installationKid_Process instType = withPatFailExc (strategyFailure "Process") $ do
     AibInstallationKid_Process kid <- idR
-    CtxOne siteType <- contextT 
     let groupName = ""
     (funCode, _) <- return ("TODO", "NULL")      -- to fix, was:  codeMapping2 (siteType, groupName)
     constT $ makeS4Function funCode
@@ -112,14 +94,13 @@ makeS4Function funCode = do
         , S4.function_kids           = []
         }
 
-processGroup :: TransformE AibProcessGroup S4.S4ProcessGroup
-processGroup = do
+processGroup :: String -> TransformE AibProcessGroup S4.S4ProcessGroup
+processGroup instType = do
     group@AibProcessGroup {} <- idR
     let groupName = process_group_name group
-    CtxOne siteType <- contextT
     (_, pgCode) <- return ("NULL", "NULL")
-    pgDescr <- return "TODO"      -- to fix, was: level3ProcessGroupDescription pgCode
-    allprocs <- liftContext (push groupName) $ aibProcessGroupT processGroupKid (\_ _ _ kids -> kids)
+    pgDescr <- constT $ level3ProcessGroupDescription pgCode
+    allprocs <- aibProcessGroupT (processGroupKid instType groupName) (\_ _ _ kids -> kids)
 
     return $ S4.S4ProcessGroup 
                 { S4.process_group_floc_code    = ""
@@ -129,20 +110,19 @@ processGroup = do
                 , S4.process_group_kids         = allprocs
                 }
 
-processGroupKid :: TransformE AibProcessGroupKid S4.S4Process
-processGroupKid = processGroupKid_Process
+processGroupKid :: String -> String -> TransformE AibProcessGroupKid S4.S4Process
+processGroupKid siteType groupName = processGroupKid_Process siteType groupName
     
-processGroupKid_Process :: TransformE AibProcessGroupKid S4.S4Process
-processGroupKid_Process = 
-    aibProcessGroupKid_ProcessT process (\a -> a)
+processGroupKid_Process :: String -> String -> TransformE AibProcessGroupKid S4.S4Process
+processGroupKid_Process siteType groupName = 
+    aibProcessGroupKid_ProcessT (process siteType groupName) (\a -> a)
 
-process :: TransformE AibProcess S4.S4Process
-process = do
+process :: String -> String -> TransformE AibProcess S4.S4Process
+process siteType groupName = do
     proc@AibProcess {} <- idR
     let procName = process_name proc
-    CtxTwo siteType groupName <- contextT
-    (_, _, procCode) <- return (siteType, groupName, procName)      -- To Fix
-    procDescr <- return "TODO"      -- to fix, was: level4ProcessDescription procCode 
+    (_, _, procCode) <- constT $ getProcessFlocInfo siteType groupName procName
+    procDescr <- constT $ level4ProcessDescription procCode 
     return $ S4.S4Process
                 { S4.process_floc_code          = ""
                 , S4.process_code               = procCode
