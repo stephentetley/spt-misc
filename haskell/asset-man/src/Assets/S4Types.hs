@@ -30,10 +30,12 @@ module Assets.S4Types
   , S4Component(..)
 
  
-  , coalesceFunctions
+  , mergeFunctions
 
   ) where
 
+
+import Data.Function ( on )
 import Data.List
 
 import Text.JSON                        -- package: json
@@ -372,18 +374,80 @@ instance JSON S4Component where
 
 
 -------------------------------------------------------------------------------
--- Coalescing (when building) 
+-- Coalescing (when building, floc_code not available) 
 
-coalesceFunctions :: [S4Function] -> [S4Function]
-coalesceFunctions = 
-        map coalesce1 . groupBy equality . sortBy ordering
+mergeFunctions :: [S4Function] -> [S4Function]
+mergeFunctions = 
+        map coalesce . groupBy equality . sortBy ordering
     where
-        ordering a b = compare (function_floc_code a) (function_floc_code b)
-        equality a b = function_floc_code a == function_floc_code b
-        coalesce1 [] = error "coalesceFunctions - impossible"
-        coalesce1 (x:xs) = foldr coalesceB x xs
-        coalesceB a acc = 
-            let kids1 = function_kids acc ++ function_kids a
+        ordering = on compare function_code
+        equality = on (==) function_code
+        coalesce [] = error "mergeFunctions - impossible"
+        coalesce (x:xs) = foldr coalesce2 x xs
+        coalesce2 a acc = 
+            let kids1 = mergeProcessGroups (function_kids acc ++ function_kids a)
             in acc { function_kids = kids1 }
 
-       
+mergeProcessGroups :: [S4ProcessGroup] -> [S4ProcessGroup]
+mergeProcessGroups = 
+        map coalesce . groupBy equality . sortBy ordering
+    where
+        ordering = on compare process_group_code
+        equality = on (==) process_group_code
+        coalesce [] = error "mergeProcessGroups - impossible"
+        coalesce (x:xs) = foldr coalesce2 x xs
+        coalesce2 a acc = 
+            let kids1 = mergeProcesses (process_group_kids acc ++ process_group_kids a)
+            in acc { process_group_kids = kids1 }
+
+mergeProcesses :: [S4Process] -> [S4Process]
+mergeProcesses = 
+        map coalesce . groupBy equality . sortBy ordering
+    where
+        ordering = on compare process_code
+        equality = on (==) process_code
+        coalesce [] = error "mergeProcesses - impossible"
+        coalesce (x:xs) = foldr coalesce2 x xs
+        coalesce2 a acc = 
+            let kids1 = mergeSystems (process_kids acc ++ process_kids a)
+            in acc { process_kids = kids1 }
+
+
+mergeSystems :: [S4System] -> [S4System]
+mergeSystems = 
+        map coalesce . groupBy equality . sortBy ordering
+    where
+        ordering = on compare system_code
+        equality = on (==) system_code
+        coalesce [] = error "mergeSystems - impossible"
+        coalesce (x:xs) = foldr coalesce2 x xs
+        coalesce2 a acc = 
+            let kids1 = mergeSubsystems (system_kids acc ++ system_kids a)
+            in acc { system_kids = kids1 }
+
+
+mergeSubsystems :: [S4Subsystem] -> [S4Subsystem]
+mergeSubsystems = 
+        map coalesce . groupBy equality . sortBy ordering
+    where
+        ordering = on compare subsystem_code
+        equality = on (==) subsystem_code
+        coalesce [] = error "mergeSubsystems - impossible"
+        coalesce (x:xs) = foldr coalesce2 x xs
+        coalesce2 a acc = 
+            let kids1 = mergeMainItems (subsystem_kids acc ++ subsystem_kids a)
+            in acc { subsystem_kids = kids1 }
+
+
+mergeMainItems :: [S4MainItem] -> [S4MainItem]
+mergeMainItems = 
+        map coalesce . groupBy equality . sortBy ordering
+    where
+        ordering = on compare main_item_code
+        equality = on (==) main_item_code
+        coalesce [] = error "mergeMainItems - impossible"
+        coalesce (x:xs) = foldr coalesce2 x xs
+        coalesce2 a acc = 
+            let kids1 = main_item_kids acc ++ main_item_kids a
+            in acc { main_item_kids = kids1 }
+

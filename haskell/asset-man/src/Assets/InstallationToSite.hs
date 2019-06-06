@@ -73,7 +73,7 @@ installation = withPatFailExc (strategyFailure "installation") $ do
               { S4.site_code           = site_level1_code info
               , S4.site_name           = site_s4_name info
               , S4.site_attributes     = installation_attributes inst
-              , S4.site_kids           = S4.coalesceFunctions allfuns
+              , S4.site_kids           = S4.mergeFunctions allfuns
               }
 
 installationKid :: TransformE Ctx1 AibInstallationKid S4.S4Function
