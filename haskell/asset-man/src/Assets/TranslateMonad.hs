@@ -194,12 +194,12 @@ level3ProcessGroupDescription :: String -> TranslateM String
 level3ProcessGroupDescription code = do
     dict <- asks level_3_descriptions
     case stringLookup code dict of
-        Nothing -> return $ "{" ++ code ++ "}"
+        Nothing -> return ""
         Just ans -> return ans   
                 
 level4ProcessDescription :: String -> TranslateM String 
 level4ProcessDescription code = do
     dict <- asks level_4_descriptions
     case stringLookup code dict of
-        Nothing -> return $ "{" ++ code ++ "}"
-        Just ans -> return ans           
+        Nothing -> return ""
+        Just ans -> return ans

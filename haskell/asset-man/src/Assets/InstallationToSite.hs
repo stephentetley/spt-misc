@@ -118,7 +118,7 @@ processGroup = withPatFailExc (strategyFailure "processGroup") $ do
     group@AibProcessGroup {} <- idR
     Ctx1 instType <- contextT
     let groupName = process_group_name group
-    (_, pgCode) <- return ("NULL", "NULL")
+    (_, pgCode) <- liftTranslate $ getProcessGroupFlocInfo instType groupName
     pgDescr <- liftTranslate $ level3ProcessGroupDescription pgCode
     allprocs <- withContext (Ctx2 instType groupName) $ 
                     aibProcessGroupT processGroupKid (\_ _ _ kids -> kids)
@@ -145,10 +145,11 @@ process = withPatFailExc (strategyFailure "AibProcess") $ do
     let procName = process_name proc
     (_, _, procCode) <- liftTranslate $ getProcessFlocInfo siteType groupName procName
     procDescr <- liftTranslate $ level4ProcessDescription procCode 
+    let tempName = "{ s4:'" ++ procDescr ++ "', aib:'" ++ procName ++ "'}"
     return $ S4.S4Process
                 { S4.process_floc_code          = ""
                 , S4.process_code               = procCode
-                , S4.process_name               = procDescr
+                , S4.process_name               = tempName
                 , S4.process_attributes         = noAttrs
                 , S4.process_kids               = []
                 }

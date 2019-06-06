@@ -18,11 +18,14 @@
 
 module Demo01 where
 
+import Control.Exception    
+import qualified Data.Map as Map
+-- import Data.List
+
 import Text.JSON                        -- package: json
 import Language.KURE                    -- package: KURE
 
-import qualified Data.Map as Map
--- import Data.List
+
 
 import Assets.Common
 import Assets.FlocPath
@@ -83,5 +86,28 @@ demo02 = do
     let (ans::Result S4Site) = decodeStrict json
     case ans of
         Error errMsg -> error errMsg
-        Ok a1 -> return a1                    
+        Ok a1 -> return a1    
+        
+
+testFloc2 :: String -> IO ()
+testFloc2 procGroup = do
+    env <- loadRules $ rulesConfig
+    print procGroup
+    print $ runTranslateM env displayException $ do
+        getProcessGroupFlocInfo "STW" procGroup
+
+demo03 = 
+    mapM_ testFloc2 $
+        [ "CHEMICAL SERVICES"
+        , "CONTROL SERVICES"
+        , "ELECTRICAL SERVICES"
+        , "INSTALLATION SERVICES"
+        , "PRELIMINARY TREATMENT-STW"
+        , "PRIMARY TREATMENT"
+        , "SECONDARY TREATMENT"
+        , "SLUDGE TREATMENT"
+        , "STATUTORY"
+        , "STORM TREATMENT"
+        , "TERTIARY TREATMENT"
+        ]
 
