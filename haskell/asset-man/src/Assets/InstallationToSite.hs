@@ -67,9 +67,9 @@ installation = withPatFailExc (strategyFailure "installation") $ do
 
 installationKid :: String -> TransformE AibInstallationKid S4.S4Function
 installationKid instType = 
-    promoteT (installationKid_ProcessGroup instType)  
-        <+ promoteT (installationKid_Process instType) 
-        <+ catchall ""
+    installationKid_ProcessGroup instType
+        <+ installationKid_Process instType
+        <+ catchall instType
 
 installationKid_ProcessGroup :: String -> TransformE AibInstallationKid S4.S4Function      
 installationKid_ProcessGroup instType = withPatFailExc (strategyFailure "installationKid_ProcessGroup") $ do

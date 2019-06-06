@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase                 #-}
 {-# OPTIONS -Wall #-}
 
 --------------------------------------------------------------------------------
@@ -28,7 +29,8 @@ import Language.KURE                    -- package: KURE
 import Assets.AibTypes
 import Assets.AibUniverse
 
-
+nodeLabel :: String -> String -> String
+nodeLabel name typ = name ++ " : " ++ typ
 
 type TransformE a b = Transform () KureM a b
 
@@ -48,54 +50,58 @@ aibDrawTree installation =
 installationTree :: TransformE AibInstallation (Tree String)
 installationTree = do
     inst@AibInstallation {} <- idR
-    kids <- return [] -- s4SiteT functionTree (\_ _ _ -> id)
-    return $ Node (installation_name inst) kids
+    kids <- aibInstallationT installationKid (\_ _ _ _ -> id)
+    return $ Node (nodeLabel (installation_name inst) "Installation") kids
 
-    {-
-installationTree_ProcessGroup ::  TransformE AibInstallationKid (Tree String)   
-installationTree_ProcessGroup = do
-    procg@AibInstallationKid_ProcessGroup {} <- idR
-    kids <- return [] -- s4FunctionT processGroupTree (\_ _ _ _ -> id)
-    return $ Node (function_name func) kids
+
+
+-- Don't draw    
+installationKid ::  TransformE AibInstallationKid (Tree String)   
+installationKid = 
+    transform $ \cx -> \case
+        AibInstallationKid_ProcessGroup kid -> applyT processGroupTree cx kid
+        AibInstallationKid_Process kid -> applyT processTree cx kid
+
+
 
 
 processGroupTree ::  TransformE AibProcessGroup (Tree String)   
 processGroupTree = do
     procg@AibProcessGroup {} <- idR
-    kids <- aibProcessGroupT processTree (\_ _ _ _ -> id)
-    return $ Node (process_group_name procg) kids    
+    kids <- aibProcessGroupT processGroupKid (\_ _ _ -> id)
+    return $ Node (nodeLabel (process_group_name procg) "ProcessGroup") kids    
 
 
-processTree ::  TransformE S4Process (Tree String)   
+-- Don't draw    
+processGroupKid ::  TransformE AibProcessGroupKid (Tree String)   
+processGroupKid = 
+    transform $ \cx -> \case
+        AibProcessGroupKid_Process kid -> applyT processTree cx kid
+
+
+processTree ::  TransformE AibProcess (Tree String)   
 processTree = do
-    proc@S4Process {} <- idR
-    kids <- s4ProcessT systemTree (\_ _ _ _ -> id)
-    return $ Node (process_name proc) kids        
+    proc@AibProcess {} <- idR
+    kids <- aibProcessT processKid (\_ _ _ -> id)
+    return $ Node (nodeLabel (process_name proc) "Process") kids        
+
+processKid ::  TransformE AibProcessKid (Tree String)      
+processKid = 
+    transform $ \cx -> \case
+        AibProcessKid_PlantAssembly kid -> applyT plantAssemblyTree cx kid
+        AibProcessKid_PlantItem kid     -> applyT plantItemTree cx kid
+
+
+plantAssemblyTree ::  TransformE AibPlantAssembly (Tree String)   
+plantAssemblyTree = do
+    item@AibPlantAssembly {} <- idR
+    kids <- return [] -- aibProcessT systemTree (\_ _ _ _ -> id)
+    return $ Node (nodeLabel (plant_assembly_name item) "PlantAssembly") kids    
 
 
 
-systemTree ::  TransformE S4System (Tree String)   
-systemTree = do
-    sys@S4System {} <- idR
-    kids <- s4SystemT subsystemTree (\_ _ _ _ -> id)
-    return $ Node (system_name sys) kids        
-
-
-subsystemTree ::  TransformE S4Subsystem (Tree String)   
-subsystemTree = do
-    subsys@S4Subsystem {} <- idR
-    kids <- s4SubsystemT mainItemTree (\_ _ _ _ -> id)
-    return $ Node (subsystem_name subsys) kids 
-
-mainItemTree ::  TransformE S4MainItem (Tree String)   
-mainItemTree = do
-    item@S4MainItem {} <- idR
-    kids <- s4MainItemT componentTree (\_ _ _ _ -> id)
-    return $ Node (main_item_name item) kids 
-    
-componentTree ::  TransformE S4Component (Tree String)   
-componentTree = do
-    comp@S4Component {} <- idR
-    return $ Node (component_name comp) [] 
-
--}    
+plantItemTree ::  TransformE AibPlantItem (Tree String)   
+plantItemTree = do
+    item@AibPlantItem {} <- idR
+    kids <- return [] -- aibProcessT systemTree (\_ _ _ _ -> id)
+    return $ Node (nodeLabel (plant_item_name item) "PlantItem") kids    

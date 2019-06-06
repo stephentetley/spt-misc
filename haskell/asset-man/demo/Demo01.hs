@@ -29,7 +29,7 @@ import Assets.FlocPath
 import Assets.AibTypes
 import Assets.AibPretty
 import Assets.S4Types
-import Assets.TranslationRules
+-- import Assets.TranslationRules
 import Assets.TranslateMonad
 import Assets.InstallationToSite
 import qualified Assets.S4Pretty as S4
