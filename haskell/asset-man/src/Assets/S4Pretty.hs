@@ -28,6 +28,9 @@ import Language.KURE                    -- package: KURE
 import Assets.S4Types
 import Assets.S4Universe
 
+nodeLabel :: String -> String -> String
+nodeLabel name typ = name ++ " : " ++ typ
+
 
 type TransformE a b = Transform () KureM a b
 
@@ -48,26 +51,26 @@ siteTree :: TransformE S4Site (Tree String)
 siteTree = do
     site@S4Site {} <- idR
     kids <- s4SiteT functionTree (\_ _ _ -> id)
-    return $ Node (site_name site) kids
+    return $ Node (nodeLabel (site_name site) "Site") kids
 
 functionTree ::  TransformE S4Function (Tree String)   
 functionTree = do
     func@S4Function {} <- idR
     kids <- s4FunctionT processGroupTree (\_ _ _ _ -> id)
-    return $ Node (function_name func) kids
+    return $ Node (nodeLabel (function_name func) "Function") kids
 
 processGroupTree ::  TransformE S4ProcessGroup (Tree String)   
 processGroupTree = do
     procg@S4ProcessGroup {} <- idR
     kids <- s4ProcessGroupT processTree (\_ _ _ _ -> id)
-    return $ Node (process_group_name procg) kids    
+    return $ Node (nodeLabel (process_group_name procg) "ProcessGroup") kids    
 
 
 processTree ::  TransformE S4Process (Tree String)   
 processTree = do
     proc@S4Process {} <- idR
     kids <- s4ProcessT systemTree (\_ _ _ _ -> id)
-    return $ Node (process_name proc) kids        
+    return $ Node (nodeLabel (process_name proc) "Process") kids        
 
 
 
@@ -75,22 +78,22 @@ systemTree ::  TransformE S4System (Tree String)
 systemTree = do
     sys@S4System {} <- idR
     kids <- s4SystemT subsystemTree (\_ _ _ _ -> id)
-    return $ Node (system_name sys) kids        
+    return $ Node (nodeLabel (system_name sys) "System") kids        
 
 
 subsystemTree ::  TransformE S4Subsystem (Tree String)   
 subsystemTree = do
     subsys@S4Subsystem {} <- idR
     kids <- s4SubsystemT mainItemTree (\_ _ _ _ -> id)
-    return $ Node (subsystem_name subsys) kids 
+    return $ Node (nodeLabel (subsystem_name subsys) "Subsystem") kids 
 
 mainItemTree ::  TransformE S4MainItem (Tree String)   
 mainItemTree = do
     item@S4MainItem {} <- idR
     kids <- s4MainItemT componentTree (\_ _ _ _ -> id)
-    return $ Node (main_item_name item) kids 
+    return $ Node (nodeLabel (main_item_name item) "MaintainableItem") kids 
     
 componentTree ::  TransformE S4Component (Tree String)   
 componentTree = do
     comp@S4Component {} <- idR
-    return $ Node (component_name comp) [] 
+    return $ Node (nodeLabel (component_name comp) "Component") [] 

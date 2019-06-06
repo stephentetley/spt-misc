@@ -85,7 +85,7 @@ processTree = do
     kids <- aibProcessT processKid (\_ _ _ -> id)
     return $ Node (nodeLabel (process_name proc) "Process") kids        
 
-processKid ::  TransformE AibProcessKid (Tree String)      
+processKid :: TransformE AibProcessKid (Tree String)      
 processKid = 
     transform $ \cx -> \case
         AibProcessKid_PlantAssembly kid -> applyT plantAssemblyTree cx kid
@@ -95,13 +95,30 @@ processKid =
 plantAssemblyTree ::  TransformE AibPlantAssembly (Tree String)   
 plantAssemblyTree = do
     item@AibPlantAssembly {} <- idR
-    kids <- return [] -- aibProcessT systemTree (\_ _ _ _ -> id)
+    kids <- aibPlantAssemblyT plantAssemblyKid (\_ _ _ -> id)
     return $ Node (nodeLabel (plant_assembly_name item) "PlantAssembly") kids    
 
-
-
+plantAssemblyKid :: TransformE AibPlantAssemblyKid  (Tree String) 
+plantAssemblyKid = 
+    transform $ \cx -> \case
+        AibPlantAssemblyKid_PlantItem kid   -> applyT plantItemTree cx kid
+        AibPlantAssemblyKid_Equipment kid   -> applyT equipmentTree cx kid
+        AibPlantAssemblyKid_Unknown kid     -> applyT unknownTree cx kid
+    
+    
 plantItemTree ::  TransformE AibPlantItem (Tree String)   
 plantItemTree = do
     item@AibPlantItem {} <- idR
-    kids <- return [] -- aibProcessT systemTree (\_ _ _ _ -> id)
-    return $ Node (nodeLabel (plant_item_name item) "PlantItem") kids    
+    kids <- aibPlantItemT equipmentTree (\_ _ _ -> id)
+    return $ Node (nodeLabel (plant_item_name item) "PlantItem") kids   
+    
+    
+equipmentTree ::  TransformE AibEquipment (Tree String)   
+equipmentTree = do
+    item@AibEquipment {} <- idR
+    return $ Node (nodeLabel (equipment_name item) "Equipment") []
+
+unknownTree ::  TransformE AibUnknown (Tree String)   
+unknownTree = do
+    item@AibUnknown {} <- idR
+    return $ Node (nodeLabel (unknown_name item) "Unknown") []    
