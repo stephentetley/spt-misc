@@ -38,26 +38,33 @@ import Assets.AibUniverse
 import qualified Assets.S4Types as S4
 
 
+-- NOTE - with parametric context we can store increasing keys...
 
+data Ctx0   = Ctx0
+data Ctx1   = Ctx1 !String
+data Ctx2   = Ctx2 !String !String
+-- data Ctx3   = Ctx3 !String !String !String
 
-type TransformE a b = Transform () TranslateM a b
-type RewriteE a b = TransformE a b
+type TransformE ctx a b = Transform ctx TranslateM a b
+type RewriteE ctx a b = TransformE ctx a b
 
-applyTransform :: RulesEnv -> TransformE a b -> a -> Either String b
-applyTransform env t = runTranslateM env displayException . applyT t ()
+applyTransform :: RulesEnv -> TransformE Ctx0 a b -> a -> Either String b
+applyTransform env t = runTranslateM env displayException . applyT t Ctx0
 
+withContext :: c1 -> Transform c1 m a b -> Transform c m a b 
+withContext c1 = liftContext (const c1)
 
-
-installationToSite :: TransformE AibInstallation S4.S4Site
+installationToSite :: TransformE Ctx0 AibInstallation S4.S4Site
 installationToSite = installation
 
 
-installation :: TransformE AibInstallation S4.S4Site
+installation :: TransformE Ctx0 AibInstallation S4.S4Site
 installation = withPatFailExc (strategyFailure "installation") $ do 
     inst@AibInstallation {} <- idR
     info <- constT (getSiteFlocInfo (installation_ref inst))
     let instType = site_type info
-    allfuns <- aibInstallationT (installationKid instType) (\_ _ _ _ kids -> kids)
+    allfuns <- withContext (Ctx1 instType) $ 
+                    aibInstallationT installationKid (\_ _ _ _ kids -> kids)
     return S4.S4Site 
               { S4.site_code           = site_level1_code info
               , S4.site_name           = site_s4_name info
@@ -65,29 +72,31 @@ installation = withPatFailExc (strategyFailure "installation") $ do
               , S4.site_kids           = S4.coalesceFunctions allfuns
               }
 
-installationKid :: String -> TransformE AibInstallationKid S4.S4Function
-installationKid instType = 
-    installationKid_ProcessGroup instType
-        <+ installationKid_Process instType
-        <+ catchall instType
+installationKid :: TransformE Ctx1 AibInstallationKid S4.S4Function
+installationKid = 
+    installationKid_ProcessGroup 
+        <+ installationKid_Process 
+        <+ catchall
 
-installationKid_ProcessGroup :: String -> TransformE AibInstallationKid S4.S4Function      
-installationKid_ProcessGroup instType = withPatFailExc (strategyFailure "installationKid_ProcessGroup") $ do
+installationKid_ProcessGroup :: TransformE Ctx1 AibInstallationKid S4.S4Function      
+installationKid_ProcessGroup = withPatFailExc (strategyFailure "installationKid_ProcessGroup") $ do
     AibInstallationKid_ProcessGroup kid <- idR
+    Ctx1 instType <- contextT 
     let groupName = process_group_name kid
     (funCode, _) <- constT $ getProcessGroupFlocInfo instType groupName
-    procg <- aibInstallationKid_ProcessGroupT (processGroup instType) (\kids -> kids)
+    procg <- aibInstallationKid_ProcessGroupT processGroup (\kids -> kids)
     constT $ makeS4Function funCode [procg]
 
-installationKid_Process :: String -> TransformE AibInstallationKid S4.S4Function  
-installationKid_Process instType = withPatFailExc (strategyFailure "installationKid_Process") $ do
+installationKid_Process :: TransformE Ctx1 AibInstallationKid S4.S4Function  
+installationKid_Process  = withPatFailExc (strategyFailure "installationKid_Process") $ do
     AibInstallationKid_Process {} <- idR
+    Ctx1 instType   <- contextT
     let groupName = "NULL"
     (funCode, _) <- constT $ getProcessGroupFlocInfo instType groupName
     constT $ makeS4Function funCode []
 
-catchall :: String -> TransformE AibInstallationKid S4.S4Function  
-catchall _ = constT $ makeS4Function "catchall" []
+catchall :: TransformE Ctx1 AibInstallationKid S4.S4Function  
+catchall = constT $ makeS4Function "catchall" []
 
 makeS4Function :: String -> [S4.S4ProcessGroup] -> TranslateM S4.S4Function
 makeS4Function funCode procgs = do
@@ -100,13 +109,15 @@ makeS4Function funCode procgs = do
         , S4.function_kids           = procgs
         }
 
-processGroup :: String -> TransformE AibProcessGroup S4.S4ProcessGroup
-processGroup instType = withPatFailExc (strategyFailure "processGroup") $ do
+processGroup :: TransformE Ctx1 AibProcessGroup S4.S4ProcessGroup
+processGroup = withPatFailExc (strategyFailure "processGroup") $ do
     group@AibProcessGroup {} <- idR
+    Ctx1 instType <- contextT
     let groupName = process_group_name group
     (_, pgCode) <- return ("NULL", "NULL")
     pgDescr <- constT $ level3ProcessGroupDescription pgCode
-    allprocs <- aibProcessGroupT (processGroupKid instType groupName) (\_ _ _ kids -> kids)
+    allprocs <- withContext (Ctx2 instType groupName) $ 
+                    aibProcessGroupT processGroupKid (\_ _ _ kids -> kids)
 
     return $ S4.S4ProcessGroup 
                 { S4.process_group_floc_code    = ""
@@ -116,16 +127,17 @@ processGroup instType = withPatFailExc (strategyFailure "processGroup") $ do
                 , S4.process_group_kids         = allprocs
                 }
 
-processGroupKid :: String -> String -> TransformE AibProcessGroupKid S4.S4Process
-processGroupKid siteType groupName = processGroupKid_Process siteType groupName
+processGroupKid :: TransformE Ctx2 AibProcessGroupKid S4.S4Process
+processGroupKid = processGroupKid_Process
     
-processGroupKid_Process :: String -> String -> TransformE AibProcessGroupKid S4.S4Process
-processGroupKid_Process siteType groupName = 
-    aibProcessGroupKid_ProcessT (process siteType groupName) (\a -> a)
+processGroupKid_Process :: TransformE Ctx2 AibProcessGroupKid S4.S4Process
+processGroupKid_Process = 
+    aibProcessGroupKid_ProcessT process (\a -> a)
 
-process :: String -> String -> TransformE AibProcess S4.S4Process
-process siteType groupName = withPatFailExc (strategyFailure "AibProcess") $ do
+process :: TransformE Ctx2 AibProcess S4.S4Process
+process = withPatFailExc (strategyFailure "AibProcess") $ do
     proc@AibProcess {} <- idR
+    Ctx2 siteType groupName <- contextT 
     let procName = process_name proc
     (_, _, procCode) <- constT $ getProcessFlocInfo siteType groupName procName
     procDescr <- constT $ level4ProcessDescription procCode 
