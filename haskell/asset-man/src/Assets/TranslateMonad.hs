@@ -35,15 +35,21 @@ module Assets.TranslateMonad
     ) where
 
 import Prelude hiding ( fail )
-import Control.Exception        
+import Control.Exception     
+import Control.Monad   
 import Control.Monad.Fail
+import qualified Control.Monad.Fail as Fail
 import Control.Monad.Reader.Class
-import qualified Data.Map as Map
 
 import Language.KURE.MonadCatch         -- package: KURE
 
 import Assets.Common
 import Assets.TranslationRules
+
+-- NOTE
+-- Monad.Fail seems unpleasantly flaky with my GHC (8.4.2)
+
+
 
 data TranslateException = TranslateException String
     deriving (Eq, Show)
@@ -105,9 +111,12 @@ instance Monad TranslateM where
     ma >>= k = TranslateM $ \env -> 
                     getTranslateM ma env >>= \ans -> getTranslateM (k ans) env
 
-instance MonadFail TranslateM where
     fail :: String -> TranslateM a
-    fail msg = TranslateM $ \_ -> Left $ SomeException $ TranslateException msg 
+    fail msg = TranslateM $ \_ -> Left $ SomeException $ PatternMatchFail msg 
+
+instance Fail.MonadFail TranslateM where
+    fail :: String -> TranslateM a
+    fail msg = TranslateM $ \_ -> Left $ SomeException $ PatternMatchFail msg 
 
 instance MonadThrow TranslateM where
     throwM :: Exception e => e -> TranslateM a
