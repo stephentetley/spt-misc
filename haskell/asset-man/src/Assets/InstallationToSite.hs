@@ -54,6 +54,10 @@ applyTransform env t = runTranslateM env displayException . applyT t Ctx0
 withContext :: c1 -> Transform c1 m a b -> Transform c m a b 
 withContext c1 = liftContext (const c1)
 
+liftTranslate :: TranslateM b -> TransformE ctx a b
+liftTranslate = constT
+
+
 installationToSite :: TransformE Ctx0 AibInstallation S4.S4Site
 installationToSite = installation
 
@@ -61,7 +65,7 @@ installationToSite = installation
 installation :: TransformE Ctx0 AibInstallation S4.S4Site
 installation = withPatFailExc (strategyFailure "installation") $ do 
     inst@AibInstallation {} <- idR
-    info <- constT (getSiteFlocInfo (installation_ref inst))
+    info <- liftTranslate (getSiteFlocInfo (installation_ref inst))
     let instType = site_type info
     allfuns <- withContext (Ctx1 instType) $ 
                     aibInstallationT installationKid (\_ _ _ _ kids -> kids)
@@ -83,20 +87,20 @@ installationKid_ProcessGroup = withPatFailExc (strategyFailure "installationKid_
     AibInstallationKid_ProcessGroup kid <- idR
     Ctx1 instType <- contextT 
     let groupName = process_group_name kid
-    (funCode, _) <- constT $ getProcessGroupFlocInfo instType groupName
+    (funCode, _) <- liftTranslate $ getProcessGroupFlocInfo instType groupName
     procg <- aibInstallationKid_ProcessGroupT processGroup (\kids -> kids)
-    constT $ makeS4Function funCode [procg]
+    liftTranslate $ makeS4Function funCode [procg]
 
 installationKid_Process :: TransformE Ctx1 AibInstallationKid S4.S4Function  
 installationKid_Process  = withPatFailExc (strategyFailure "installationKid_Process") $ do
     AibInstallationKid_Process {} <- idR
     Ctx1 instType   <- contextT
     let groupName = "NULL"
-    (funCode, _) <- constT $ getProcessGroupFlocInfo instType groupName
-    constT $ makeS4Function funCode []
+    (funCode, _) <- liftTranslate $ getProcessGroupFlocInfo instType groupName
+    liftTranslate $ makeS4Function funCode []
 
 catchall :: TransformE Ctx1 AibInstallationKid S4.S4Function  
-catchall = constT $ makeS4Function "catchall" []
+catchall = liftTranslate $ makeS4Function "catchall" []
 
 makeS4Function :: String -> [S4.S4ProcessGroup] -> TranslateM S4.S4Function
 makeS4Function funCode procgs = do
@@ -115,7 +119,7 @@ processGroup = withPatFailExc (strategyFailure "processGroup") $ do
     Ctx1 instType <- contextT
     let groupName = process_group_name group
     (_, pgCode) <- return ("NULL", "NULL")
-    pgDescr <- constT $ level3ProcessGroupDescription pgCode
+    pgDescr <- liftTranslate $ level3ProcessGroupDescription pgCode
     allprocs <- withContext (Ctx2 instType groupName) $ 
                     aibProcessGroupT processGroupKid (\_ _ _ kids -> kids)
 
@@ -139,8 +143,8 @@ process = withPatFailExc (strategyFailure "AibProcess") $ do
     proc@AibProcess {} <- idR
     Ctx2 siteType groupName <- contextT 
     let procName = process_name proc
-    (_, _, procCode) <- constT $ getProcessFlocInfo siteType groupName procName
-    procDescr <- constT $ level4ProcessDescription procCode 
+    (_, _, procCode) <- liftTranslate $ getProcessFlocInfo siteType groupName procName
+    procDescr <- liftTranslate $ level4ProcessDescription procCode 
     return $ S4.S4Process
                 { S4.process_floc_code          = ""
                 , S4.process_code               = procCode
