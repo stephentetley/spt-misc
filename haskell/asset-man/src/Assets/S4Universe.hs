@@ -67,6 +67,7 @@ module Assets.S4Universe
 
   ) where
 
+import Debug.Trace
 
 import Language.KURE                    -- package: kure
 
@@ -156,7 +157,9 @@ s4SiteT :: (ExtendPath c String, MonadThrow m)
     -> Transform c m S4Site b
 s4SiteT t f = transform $ \c -> \case
     S4Site floc name attrs kids -> 
-        f floc name attrs <$> mapM (\x -> applyT t (c @@ floc) x) kids    
+        let c1 = c @@ floc in
+        trace ("s4SiteT: " ++ floc ++ ", " ++ name) $
+            f floc name attrs <$> mapM (\x -> applyT t c1 x) kids    
 
 s4SiteAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4Function -> Rewrite c m S4Site
@@ -177,8 +180,10 @@ s4FunctionT :: (ExtendPath c String, MonadThrow m)
     -> (String -> String -> Attributes -> [a1] -> b) 
     -> Transform c m S4Function b
 s4FunctionT t f = transform $ \c -> \case
-    S4Function floc name attrs kids -> 
-        f floc name attrs <$> mapM (\x -> applyT t (c @@ floc) x) kids    
+    S4Function floc name attrs kids ->
+        let c1 = c @@ floc in
+        trace ("s4FunctionT: " ++ floc ++ ", " ++ name) $
+            f floc name attrs <$> mapM (\x -> applyT t c1 x) kids    
 
 s4FunctionAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4ProcessGroup -> Rewrite c m S4Function
@@ -201,7 +206,9 @@ s4ProcessGroupT :: (ExtendPath c String, MonadThrow m)
     -> Transform c m S4ProcessGroup b
 s4ProcessGroupT t f = transform $ \c -> \case
     S4ProcessGroup floc name attrs kids -> 
-        f floc name attrs <$> mapM (\x -> applyT t (c @@ floc) x) kids    
+        let c1 = c @@ floc in
+        trace ("s4ProcessGroupT: " ++ floc ++ ", " ++ name) $
+            f floc name attrs <$> mapM (\x -> applyT t c1 x) kids    
 
 s4ProcessGroupAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4Process -> Rewrite c m S4ProcessGroup
@@ -223,7 +230,8 @@ s4ProcessT :: (ExtendPath c String, MonadThrow m)
     -> Transform c m S4Process b
 s4ProcessT t f = transform $ \c -> \case
     S4Process floc name attrs kids -> 
-        f floc name attrs <$> mapM (\x -> applyT t (c @@ floc) x) kids    
+        let c1 = c @@ floc in
+        f floc name attrs <$> mapM (\x -> applyT t c1 x) kids    
 
 s4ProcessAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4System -> Rewrite c m S4Process
@@ -246,7 +254,8 @@ s4SystemT :: (ExtendPath c String, MonadThrow m)
     -> Transform c m S4System b
 s4SystemT t f = transform $ \c -> \case
     S4System floc name attrs kids -> 
-        f floc name attrs <$> mapM (\x -> applyT t (c @@ floc) x) kids    
+        let c1 = c @@ floc in
+        f floc name attrs <$> mapM (\x -> applyT t c1 x) kids    
 
 s4SystemAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4Subsystem -> Rewrite c m S4System
@@ -268,7 +277,8 @@ s4SubsystemT :: (ExtendPath c String, MonadThrow m)
     -> Transform c m S4Subsystem b
 s4SubsystemT t f = transform $ \c -> \case
     S4Subsystem floc name attrs kids -> 
-        f floc name attrs <$> mapM (\x -> applyT t (c @@ floc) x) kids    
+        let c1 = c @@ floc in
+        f floc name attrs <$> mapM (\x -> applyT t c1 x) kids    
 
 s4SubsystemAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4MainItem -> Rewrite c m S4Subsystem
@@ -291,7 +301,8 @@ s4MainItemT :: (ExtendPath c String, MonadThrow m)
     -> Transform c m S4MainItem b
 s4MainItemT t f = transform $ \c -> \case
     S4MainItem floc name attrs kids -> 
-        f floc name attrs <$> mapM (\x -> applyT t c x) kids    
+        let c1 = c @@ floc in
+        f floc name attrs <$> mapM (\x -> applyT t c1 x) kids    
 
 s4MainItemAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4Component -> Rewrite c m S4MainItem
