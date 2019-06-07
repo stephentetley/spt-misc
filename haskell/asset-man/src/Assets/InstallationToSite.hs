@@ -69,7 +69,7 @@ installation = withPatFailExc (strategyFailure "installation") $ do
     allfuns <- withContext (Ctx1 instType) $ 
                     aibInstallationT installationKid (\_ _ _ _ kids -> kids)
     return S4.S4Site 
-              { S4.site_code           = site_level1_code info
+              { S4.site_floc           = site_level1_code info
               , S4.site_name           = site_s4_name info
               , S4.site_attributes     = installation_attributes inst
               , S4.site_kids           = S4.mergeFunctions allfuns
@@ -105,11 +105,10 @@ makeS4Function :: String -> [S4.S4ProcessGroup] -> TranslateM S4.S4Function
 makeS4Function funCode procgs = do
     funName <- level2FunctionDescription funCode
     return $ S4.S4Function
-        { S4.function_floc_code      = ""
-        , S4.function_code           = funCode
-        , S4.function_name           = funName
-        , S4.function_attributes     = noAttrs
-        , S4.function_kids           = procgs
+        { S4.function_floc          = funCode
+        , S4.function_name          = funName
+        , S4.function_attributes    = noAttrs
+        , S4.function_kids          = procgs
         }
 
 processGroup :: AibS4Transform Ctx1 AibProcessGroup S4.S4ProcessGroup
@@ -123,8 +122,7 @@ processGroup = withPatFailExc (strategyFailure "processGroup") $ do
                     aibProcessGroupT processGroupKid (\_ _ _ kids -> kids)
 
     return $ S4.S4ProcessGroup 
-                { S4.process_group_floc_code    = ""
-                , S4.process_group_code         = pgCode
+                { S4.process_group_floc         = pgCode
                 , S4.process_group_name         = pgDescr
                 , S4.process_group_attributes   = noAttrs
                 , S4.process_group_kids         = allprocs
@@ -146,11 +144,9 @@ process = withPatFailExc (strategyFailure "AibProcess") $ do
     procDescr <- liftTranslate $ level4ProcessDescription procCode 
     let tempName = if procDescr == "" then "{ aib:'" ++ procName ++ "' }" else procDescr
     return $ S4.S4Process
-                { S4.process_floc_code          = ""
-                , S4.process_code               = procCode
-                , S4.process_name               = tempName
-                , S4.process_attributes         = noAttrs
-                , S4.process_kids               = []
+                { S4.process_floc           = procCode
+                , S4.process_name           = tempName
+                , S4.process_attributes     = noAttrs
+                , S4.process_kids           = []
                 }
 
- 

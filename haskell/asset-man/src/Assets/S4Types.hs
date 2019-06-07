@@ -45,76 +45,69 @@ import Assets.Common
 
   
 data S4Site = S4Site
-    { site_code           :: String
-    , site_name           :: String
-    , site_attributes     :: Attributes
-    , site_kids           :: [S4Function]
+    { site_floc                 :: String
+    , site_name                 :: String
+    , site_attributes           :: Attributes
+    , site_kids                 :: [S4Function]
     }
     deriving (Eq,Ord,Show)
 
   
 data S4Function = S4Function
-    { function_floc_code      :: String
-    , function_code           :: String
-    , function_name           :: String
-    , function_attributes     :: Attributes
-    , function_kids           :: [S4ProcessGroup]
+    { function_floc             :: String
+    , function_name             :: String
+    , function_attributes       :: Attributes
+    , function_kids             :: [S4ProcessGroup]
     }
     deriving (Eq,Ord,Show)
   
 data S4ProcessGroup = S4ProcessGroup
-    { process_group_floc_code       :: String
-    , process_group_code            :: String
-    , process_group_name            :: String
-    , process_group_attributes      :: Attributes
-    , process_group_kids            :: [S4Process]
+    { process_group_floc        :: String
+    , process_group_name        :: String
+    , process_group_attributes  :: Attributes
+    , process_group_kids        :: [S4Process]
     }
     deriving (Eq,Ord,Show)
     
       
 data S4Process = S4Process
-    { process_floc_code             :: String
-    , process_code                  :: String
-    , process_name                  :: String
-    , process_attributes            :: Attributes
-    , process_kids                  :: [S4System]
+    { process_floc              :: String
+    , process_name              :: String
+    , process_attributes        :: Attributes
+    , process_kids              :: [S4System]
     }
     deriving (Eq,Ord,Show)
 
   
 data S4System = S4System
-    { system_floc_code     :: String
-    , system_code     :: String
-    , system_name          :: String
-    , system_attributes    :: Attributes
-    , system_kids          :: [S4Subsystem]
+    { system_floc               :: String
+    , system_name               :: String
+    , system_attributes         :: Attributes
+    , system_kids               :: [S4Subsystem]
     }
     deriving (Eq,Ord,Show)
     
       
 data S4Subsystem = S4Subsystem
-    { subsystem_floc_code     :: String
-    , subsystem_code     :: String
-    , subsystem_name          :: String
-    , subsystem_attributes    :: Attributes
-    , subsystem_kids          :: [S4MainItem]
+    { subsystem_floc            :: String
+    , subsystem_name            :: String
+    , subsystem_attributes      :: Attributes
+    , subsystem_kids            :: [S4MainItem]
     }
     deriving (Eq,Ord,Show)
 
 data S4MainItem = S4MainItem
-    { main_item_floc_code     :: String
-    , main_item_code     :: String
-    , main_item_name          :: String
-    , main_item_attributes    :: Attributes
-    , main_item_kids          :: [S4Component]
+    { main_item_floc            :: String
+    , main_item_name            :: String
+    , main_item_attributes      :: Attributes
+    , main_item_kids            :: [S4Component]
     }
     deriving (Eq,Ord,Show)
 
 data S4Component = S4Component
-    { component_floc_code     :: String
-    , component_code          :: String
-    , component_name          :: String
-    , component_attributes    :: Attributes
+    { component_floc            :: String
+    , component_name            :: String
+    , component_attributes      :: Attributes
     }
     deriving (Eq,Ord,Show)
 
@@ -125,24 +118,23 @@ data S4Component = S4Component
 instance JSON S4Site where
   showJSON :: S4Site -> JSValue
   showJSON a@(S4Site {}) = JSObject $ toJSObject $
-      [ ("attributes",            attributesToJSON $ site_attributes a)
-      , ("itemCode",              showJSON $ site_code a)
-      , ("flocCode",              showJSON $ site_code a)
-      , ("kids",                  JSArray (map showJSON $ site_kids a))
-      , ("name",                  showJSON $ site_name a)
-      , ("type",                  showJSON "Site")
+      [ ("attributes",        attributesToJSON $ site_attributes a)
+      , ("floc",              showJSON $ site_floc a)
+      , ("kids",              JSArray (map showJSON $ site_kids a))
+      , ("name",              showJSON $ site_name a)
+      , ("type",              showJSON "Site")
       ]
 
   readJSON :: JSValue -> Result (S4Site)
   readJSON (JSObject obj) = do 
       attrs     <- valFromObj "attributes"  obj >>= attributesFromJSON
-      code      <- valFromObj "itemCode"    obj >>= readJSON
+      floc      <- valFromObj "floc"        obj >>= readJSON
       kids      <- valFromObj "kids"        obj >>= \(JSArray xs) -> mapM readJSON xs
       name      <- valFromObj "name"        obj >>= readJSON
       itemtype  <- valFromObj "type"        obj >>= readJSON
       if itemtype == "Site" then 
           return (S4Site { site_attributes    = attrs
-                         , site_code          = code 
+                         , site_floc          = floc 
                          , site_kids          = kids
                          , site_name          = name
                          })
@@ -155,28 +147,25 @@ instance JSON S4Site where
 instance JSON S4Function where
   showJSON :: S4Function -> JSValue
   showJSON a@(S4Function {}) = JSObject $ toJSObject $
-      [ ("attributes",            attributesToJSON $ function_attributes a)
-      , ("flocCode",              showJSON $ function_floc_code a)
-      , ("itemCode",              showJSON $ function_code a)
-      , ("kids",                  JSArray (map showJSON $ function_kids a))
-      , ("name",                  showJSON $ function_name a)
-      , ("type",                  showJSON "Function")
+      [ ("attributes",        attributesToJSON $ function_attributes a)
+      , ("floc",              showJSON $ function_floc a)
+      , ("kids",              JSArray (map showJSON $ function_kids a))
+      , ("name",              showJSON $ function_name a)
+      , ("type",              showJSON "Function")
       ]
 
   readJSON :: JSValue -> Result (S4Function)
   readJSON (JSObject obj) = do 
       attrs     <- valFromObj "attributes"  obj >>= attributesFromJSON
-      flocCode  <- valFromObj "flocCode"    obj >>= readJSON
-      itemCode  <- valFromObj "itemCode"    obj >>= readJSON
+      floc      <- valFromObj "floc"    obj >>= readJSON
       kids      <- valFromObj "kids"        obj >>= \(JSArray xs) -> mapM readJSON xs
       name      <- valFromObj "name"        obj >>= readJSON
       itemtype  <- valFromObj "type"        obj >>= readJSON
       if itemtype == "Function" then 
-          return (S4Function { function_floc_code     = flocCode 
-                             , function_code          = itemCode
-                             , function_kids          = kids
-                             , function_name          = name
-                             , function_attributes    = attrs
+          return (S4Function { function_floc        = floc 
+                             , function_kids        = kids
+                             , function_name        = name
+                             , function_attributes  = attrs
                              })
       else
           fail "Not a function"
@@ -187,29 +176,26 @@ instance JSON S4Function where
 instance JSON S4ProcessGroup where
   showJSON :: S4ProcessGroup -> JSValue
   showJSON a@(S4ProcessGroup {}) = JSObject $ toJSObject $
-      [ ("attributes",            attributesToJSON $ process_group_attributes a)
-      , ("flocCode",              showJSON $ process_group_floc_code a)
-      , ("itemCode",              showJSON $ process_group_code a)
-      , ("kids",                  JSArray (map showJSON $ process_group_kids a))
-      , ("name",                  showJSON $ process_group_name a)
-      , ("type",                  showJSON "ProcessGroup")
+      [ ("attributes",        attributesToJSON $ process_group_attributes a)
+      , ("floc",              showJSON $ process_group_floc a)
+      , ("kids",              JSArray (map showJSON $ process_group_kids a))
+      , ("name",              showJSON $ process_group_name a)
+      , ("type",              showJSON "ProcessGroup")
       ]
 
   readJSON :: JSValue -> Result (S4ProcessGroup)
   readJSON (JSObject obj) = do 
       attrs     <- valFromObj "attributes"  obj >>= attributesFromJSON
-      flocCode  <- valFromObj "flocCode"    obj >>= readJSON
-      itemCode  <- valFromObj "itemCode"    obj >>= readJSON
+      floc      <- valFromObj "floc"    obj >>= readJSON
       kids      <- valFromObj "kids"        obj >>= \(JSArray xs) -> mapM readJSON xs
       name      <- valFromObj "name"        obj >>= readJSON
       itemtype  <- valFromObj "type"        obj >>= readJSON
       if itemtype == "ProcessGroup" then 
-          return (S4ProcessGroup { process_group_floc_code     = flocCode 
-                                  , process_group_code          = itemCode
-                                  , process_group_kids          = kids
-                                  , process_group_name          = name
-                                  , process_group_attributes    = attrs
-                                  })
+          return (S4ProcessGroup { process_group_floc         = floc 
+                                 , process_group_kids          = kids
+                                 , process_group_name          = name
+                                 , process_group_attributes    = attrs
+                                 })
       else
           fail "Not a process group"
 
@@ -219,25 +205,22 @@ instance JSON S4ProcessGroup where
 instance JSON S4Process where
   showJSON :: S4Process -> JSValue
   showJSON a@(S4Process {}) = JSObject $ toJSObject $
-      [ ("attributes",            attributesToJSON $ process_attributes a)
-      , ("flocCode",              showJSON $ process_floc_code a)
-      , ("itemCode",              showJSON $ process_code a)
-      , ("kids",                  JSArray (map showJSON $ process_kids a))
-      , ("name",                  showJSON $ process_name a)
-      , ("type",                  showJSON "Process")
+      [ ("attributes",          attributesToJSON $ process_attributes a)
+      , ("floc",                showJSON $ process_floc a)
+      , ("kids",                JSArray (map showJSON $ process_kids a))
+      , ("name",                showJSON $ process_name a)
+      , ("type",                showJSON "Process")
       ]
   
   readJSON :: JSValue -> Result (S4Process)
   readJSON (JSObject obj) = do 
       attrs     <- valFromObj "attributes"  obj >>= attributesFromJSON
-      flocCode  <- valFromObj "flocCode"    obj >>= readJSON
-      itemCode  <- valFromObj "itemCode"    obj >>= readJSON
+      floc      <- valFromObj "floc"    obj >>= readJSON
       kids      <- valFromObj "kids"        obj >>= \(JSArray xs) -> mapM readJSON xs
       name      <- valFromObj "name"        obj >>= readJSON
       itemtype  <- valFromObj "type"        obj >>= readJSON
       if itemtype == "Process" then 
-          return (S4Process { process_floc_code     = flocCode 
-                            , process_code          = itemCode
+          return (S4Process { process_floc          = floc 
                             , process_kids          = kids
                             , process_name          = name
                             , process_attributes    = attrs
@@ -250,28 +233,25 @@ instance JSON S4Process where
 instance JSON S4System where
   showJSON :: S4System -> JSValue
   showJSON a@(S4System {}) = JSObject $ toJSObject $
-      [ ("attributes",            attributesToJSON $ system_attributes a)
-      , ("flocCode",              showJSON $ system_floc_code a)
-      , ("itemCode",              showJSON $ system_code a)
-      , ("kids",                  JSArray (map showJSON $ system_kids a))
-      , ("name",                  showJSON $ system_name a)
-      , ("type",                  showJSON "MainItem")
+      [ ("attributes",          attributesToJSON $ system_attributes a)
+      , ("floc",                showJSON $ system_floc a)
+      , ("kids",                JSArray (map showJSON $ system_kids a))
+      , ("name",                showJSON $ system_name a)
+      , ("type",                showJSON "MainItem")
       ]
 
   readJSON :: JSValue -> Result (S4System)
   readJSON (JSObject obj) = do 
       attrs     <- valFromObj "attributes"  obj >>= attributesFromJSON
-      flocCode  <- valFromObj "flocCode"    obj >>= readJSON
-      itemCode  <- valFromObj "itemCode"    obj >>= readJSON
+      floc      <- valFromObj "floc"        obj >>= readJSON
       kids      <- valFromObj "kids"        obj >>= \(JSArray xs) -> mapM readJSON xs
       name      <- valFromObj "name"        obj >>= readJSON
       itemtype  <- valFromObj "type"        obj >>= readJSON
       if itemtype == "MainItem" then 
-          return (S4System { system_floc_code     = flocCode 
-                           , system_code          = itemCode
-                           , system_kids          = kids
-                           , system_name          = name
-                           , system_attributes    = attrs
+          return (S4System { system_floc        = floc 
+                           , system_kids        = kids
+                           , system_name        = name
+                           , system_attributes  = attrs
                            })
       else
           fail "Not a system"
@@ -281,25 +261,22 @@ instance JSON S4System where
 instance JSON S4Subsystem where
   showJSON :: S4Subsystem -> JSValue
   showJSON a@(S4Subsystem {}) = JSObject $ toJSObject $
-      [ ("attributes",            attributesToJSON $ subsystem_attributes a)
-      , ("flocCode",              showJSON $ subsystem_floc_code a)
-      , ("itemCode",              showJSON $ subsystem_code a)
-      , ("kids",                  JSArray (map showJSON $ subsystem_kids a))
-      , ("name",                  showJSON $ subsystem_name a)
-      , ("type",                  showJSON "MainItem")
+      [ ("attributes",          attributesToJSON $ subsystem_attributes a)
+      , ("floc",                showJSON $ subsystem_floc a)
+      , ("kids",                JSArray (map showJSON $ subsystem_kids a))
+      , ("name",                showJSON $ subsystem_name a)
+      , ("type",                showJSON "MainItem")
       ]
 
   readJSON :: JSValue -> Result (S4Subsystem)
   readJSON (JSObject obj) = do 
       attrs     <- valFromObj "attributes"  obj >>= attributesFromJSON
-      flocCode  <- valFromObj "flocCode"    obj >>= readJSON
-      itemCode  <- valFromObj "itemCode"    obj >>= readJSON
+      floc      <- valFromObj "floc"        obj >>= readJSON
       kids      <- valFromObj "kids"        obj >>= \(JSArray xs) -> mapM readJSON xs
       name      <- valFromObj "name"        obj >>= readJSON
       itemtype  <- valFromObj "type"        obj >>= readJSON
       if itemtype == "MainItem" then 
-          return (S4Subsystem { subsystem_floc_code     = flocCode 
-                              , subsystem_code          = itemCode
+          return (S4Subsystem { subsystem_floc          = floc 
                               , subsystem_kids          = kids
                               , subsystem_name          = name
                               , subsystem_attributes    = attrs
@@ -313,28 +290,25 @@ instance JSON S4Subsystem where
 instance JSON S4MainItem where
   showJSON :: S4MainItem -> JSValue
   showJSON a@(S4MainItem {}) = JSObject $ toJSObject $
-      [ ("attributes",            attributesToJSON $ main_item_attributes a)
-      , ("flocCode",              showJSON $ main_item_floc_code a)
-      , ("itemCode",              showJSON $ main_item_code a)
-      , ("kids",                  JSArray (map showJSON $ main_item_kids a))
-      , ("name",                  showJSON $ main_item_name a)
-      , ("type",                  showJSON "MainItem")
+      [ ("attributes",          attributesToJSON $ main_item_attributes a)
+      , ("floc",                showJSON $ main_item_floc a)
+      , ("kids",                JSArray (map showJSON $ main_item_kids a))
+      , ("name",                showJSON $ main_item_name a)
+      , ("type",                showJSON "MainItem")
       ]
 
   readJSON :: JSValue -> Result (S4MainItem)
   readJSON (JSObject obj) = do 
       attrs     <- valFromObj "attributes"  obj >>= attributesFromJSON
-      flocCode  <- valFromObj "flocCode"    obj >>= readJSON
-      itemCode  <- valFromObj "itemCode"    obj >>= readJSON
+      floc      <- valFromObj "floc"        obj >>= readJSON
       kids      <- valFromObj "kids"        obj >>= \(JSArray xs) -> mapM readJSON xs
       name      <- valFromObj "name"        obj >>= readJSON
       itemtype  <- valFromObj "type"        obj >>= readJSON
       if itemtype == "MainItem" then 
-          return (S4MainItem { main_item_floc_code     = flocCode 
-                             , main_item_code          = itemCode
-                             , main_item_kids          = kids
-                             , main_item_name          = name
-                             , main_item_attributes    = attrs
+          return (S4MainItem { main_item_floc       = floc
+                             , main_item_kids       = kids
+                             , main_item_name       = name
+                             , main_item_attributes = attrs
                              } )
       else
           fail "Not a main item"
@@ -346,8 +320,7 @@ instance JSON S4Component where
     showJSON :: S4Component -> JSValue
     showJSON a@(S4Component {}) = JSObject $ toJSObject $
         [ ("attributes",            attributesToJSON $ component_attributes a)
-        , ("flocCode",              showJSON $ component_floc_code a)
-        , ("itemCode",              showJSON $ component_code a)
+        , ("floc",                  showJSON $ component_floc a)
         , ("kids",                  JSArray [])
         , ("name",                  showJSON $ component_name a)
         , ("type",                  showJSON "Equipment")
@@ -355,14 +328,12 @@ instance JSON S4Component where
 
     readJSON :: JSValue -> Result (S4Component)
     readJSON (JSObject obj) = do 
-        attrs     <- valFromObj "attributes"  obj >>= attributesFromJSON
-        flocCode  <- valFromObj "flocCode"    obj >>= readJSON
-        itemCode  <- valFromObj "itemCode"    obj >>= readJSON
-        name      <- valFromObj "name"        obj >>= readJSON
-        itemtype  <- valFromObj "type"        obj >>= readJSON
+        attrs     <- valFromObj "attributes"    obj >>= attributesFromJSON
+        floc      <- valFromObj "floc"          obj >>= readJSON
+        name      <- valFromObj "name"          obj >>= readJSON
+        itemtype  <- valFromObj "type"          obj >>= readJSON
         if itemtype == "Equipment" then 
-            return (S4Component { component_floc_code     = flocCode 
-                                , component_code          = itemCode
+            return (S4Component { component_floc          = floc
                                 , component_name          = name
                                 , component_attributes    = attrs
                                 } )
@@ -372,16 +343,16 @@ instance JSON S4Component where
     readJSON _ = Error "Not a component"
 
 
-
+ 
 -------------------------------------------------------------------------------
--- Coalescing (when building, floc_code not available) 
+-- Coalescing (when building) 
 
 mergeFunctions :: [S4Function] -> [S4Function]
 mergeFunctions = 
         map coalesce . groupBy equality . sortBy ordering
     where
-        ordering = on compare function_code
-        equality = on (==) function_code
+        ordering = on compare function_floc
+        equality = on (==) function_floc
         coalesce [] = error "mergeFunctions - impossible"
         coalesce (x:xs) = foldr coalesce2 x xs
         coalesce2 a acc = 
@@ -392,8 +363,8 @@ mergeProcessGroups :: [S4ProcessGroup] -> [S4ProcessGroup]
 mergeProcessGroups = 
         map coalesce . groupBy equality . sortBy ordering
     where
-        ordering = on compare process_group_code
-        equality = on (==) process_group_code
+        ordering = on compare process_group_floc
+        equality = on (==) process_group_floc
         coalesce [] = error "mergeProcessGroups - impossible"
         coalesce (x:xs) = foldr coalesce2 x xs
         coalesce2 a acc = 
@@ -404,8 +375,8 @@ mergeProcesses :: [S4Process] -> [S4Process]
 mergeProcesses = 
         map coalesce . groupBy equality . sortBy ordering
     where
-        ordering = on compare process_code
-        equality = on (==) process_code
+        ordering = on compare process_floc
+        equality = on (==) process_floc
         coalesce [] = error "mergeProcesses - impossible"
         coalesce (x:xs) = foldr coalesce2 x xs
         coalesce2 a acc = 
@@ -417,8 +388,8 @@ mergeSystems :: [S4System] -> [S4System]
 mergeSystems = 
         map coalesce . groupBy equality . sortBy ordering
     where
-        ordering = on compare system_code
-        equality = on (==) system_code
+        ordering = on compare system_floc
+        equality = on (==) system_floc
         coalesce [] = error "mergeSystems - impossible"
         coalesce (x:xs) = foldr coalesce2 x xs
         coalesce2 a acc = 
@@ -430,8 +401,8 @@ mergeSubsystems :: [S4Subsystem] -> [S4Subsystem]
 mergeSubsystems = 
         map coalesce . groupBy equality . sortBy ordering
     where
-        ordering = on compare subsystem_code
-        equality = on (==) subsystem_code
+        ordering = on compare subsystem_floc
+        equality = on (==) subsystem_floc
         coalesce [] = error "mergeSubsystems - impossible"
         coalesce (x:xs) = foldr coalesce2 x xs
         coalesce2 a acc = 
@@ -443,8 +414,8 @@ mergeMainItems :: [S4MainItem] -> [S4MainItem]
 mergeMainItems = 
         map coalesce . groupBy equality . sortBy ordering
     where
-        ordering = on compare main_item_code
-        equality = on (==) main_item_code
+        ordering = on compare main_item_floc
+        equality = on (==) main_item_floc
         coalesce [] = error "mergeMainItems - impossible"
         coalesce (x:xs) = foldr coalesce2 x xs
         coalesce2 a acc = 

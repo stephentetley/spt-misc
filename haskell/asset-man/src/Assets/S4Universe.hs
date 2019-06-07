@@ -67,7 +67,6 @@ module Assets.S4Universe
 
   ) where
 
-import Data.Semigroup
 
 import Language.KURE                    -- package: kure
 
@@ -156,8 +155,8 @@ s4SiteT :: (ExtendPath c String, MonadThrow m)
     -> (String -> String -> Attributes -> [a1] -> b) 
     -> Transform c m S4Site b
 s4SiteT t f = transform $ \c -> \case
-    S4Site code name attrs kids -> 
-        f code name attrs <$> mapM (\x -> applyT t (c @@ code) x) kids    
+    S4Site floc name attrs kids -> 
+        f floc name attrs <$> mapM (\x -> applyT t (c @@ floc) x) kids    
 
 s4SiteAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4Function -> Rewrite c m S4Site
@@ -173,136 +172,136 @@ s4SiteOneR r1 = unwrapOneR $ s4SiteAllR (wrapOneR r1)
 
 -- S4Function
 
-s4FunctionT :: (MonadThrow m) 
+s4FunctionT :: (ExtendPath c String, MonadThrow m) 
     => Transform c m S4ProcessGroup a1 
-    -> (String -> String -> String -> Attributes -> [a1] -> b) 
+    -> (String -> String -> Attributes -> [a1] -> b) 
     -> Transform c m S4Function b
 s4FunctionT t f = transform $ \c -> \case
-    S4Function floc code name attrs kids -> 
-        f floc code name attrs <$> mapM (\x -> applyT t c x) kids    
+    S4Function floc name attrs kids -> 
+        f floc name attrs <$> mapM (\x -> applyT t (c @@ floc) x) kids    
 
-s4FunctionAllR :: (MonadThrow m) 
+s4FunctionAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4ProcessGroup -> Rewrite c m S4Function
 s4FunctionAllR r1 = s4FunctionT r1 S4Function
 
-s4FunctionAnyR :: (MonadCatch m) 
+s4FunctionAnyR :: (ExtendPath c String, MonadCatch m) 
     => Rewrite c m S4ProcessGroup -> Rewrite c m S4Function
 s4FunctionAnyR r1 = unwrapAnyR $ s4FunctionAllR (wrapAnyR r1) 
 
-s4FunctionOneR :: (MonadCatch m) 
+s4FunctionOneR :: (ExtendPath c String, MonadCatch m) 
     => Rewrite c m S4ProcessGroup -> Rewrite c m S4Function
 s4FunctionOneR r1 = unwrapOneR $ s4FunctionAllR (wrapOneR r1) 
 
 
 -- S4ProcessGroup
 
-s4ProcessGroupT :: (MonadThrow m) 
+s4ProcessGroupT :: (ExtendPath c String, MonadThrow m) 
     => Transform c m S4Process a1 
-    -> (String -> String -> String -> Attributes -> [a1] -> b) 
+    -> (String -> String -> Attributes -> [a1] -> b) 
     -> Transform c m S4ProcessGroup b
 s4ProcessGroupT t f = transform $ \c -> \case
-    S4ProcessGroup floc code name attrs kids -> 
-        f floc code name attrs <$> mapM (\x -> applyT t c x) kids    
+    S4ProcessGroup floc name attrs kids -> 
+        f floc name attrs <$> mapM (\x -> applyT t (c @@ floc) x) kids    
 
-s4ProcessGroupAllR :: (MonadThrow m) 
+s4ProcessGroupAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4Process -> Rewrite c m S4ProcessGroup
 s4ProcessGroupAllR r1 = s4ProcessGroupT r1 S4ProcessGroup
 
-s4ProcessGroupAnyR :: (MonadCatch m) 
+s4ProcessGroupAnyR :: (ExtendPath c String, MonadCatch m) 
     => Rewrite c m S4Process -> Rewrite c m S4ProcessGroup
 s4ProcessGroupAnyR r1 = unwrapAnyR $ s4ProcessGroupAllR (wrapAnyR r1) 
 
-s4ProcessGroupOneR :: (MonadCatch m) 
+s4ProcessGroupOneR :: (ExtendPath c String, MonadCatch m) 
     => Rewrite c m S4Process -> Rewrite c m S4ProcessGroup
 s4ProcessGroupOneR r1 = unwrapOneR $ s4ProcessGroupAllR (wrapOneR r1) 
 
 -- S4Process
 
-s4ProcessT :: (MonadThrow m) 
+s4ProcessT :: (ExtendPath c String, MonadThrow m) 
     => Transform c m S4System a1 
-    -> (String -> String -> String -> Attributes -> [a1] -> b) 
+    -> (String -> String -> Attributes -> [a1] -> b) 
     -> Transform c m S4Process b
 s4ProcessT t f = transform $ \c -> \case
-    S4Process floc code name attrs kids -> 
-        f floc code name attrs <$> mapM (\x -> applyT t c x) kids    
+    S4Process floc name attrs kids -> 
+        f floc name attrs <$> mapM (\x -> applyT t (c @@ floc) x) kids    
 
-s4ProcessAllR :: (MonadThrow m) 
+s4ProcessAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4System -> Rewrite c m S4Process
 s4ProcessAllR r1 = s4ProcessT r1 S4Process
 
-s4ProcessAnyR :: (MonadCatch m) 
+s4ProcessAnyR :: (ExtendPath c String, MonadCatch m) 
     => Rewrite c m S4System -> Rewrite c m S4Process
 s4ProcessAnyR r1 = unwrapAnyR $ s4ProcessAllR (wrapAnyR r1) 
 
-s4ProcessOneR :: (MonadCatch m) 
+s4ProcessOneR :: (ExtendPath c String, MonadCatch m) 
     => Rewrite c m S4System -> Rewrite c m S4Process
 s4ProcessOneR r1 = unwrapOneR $ s4ProcessAllR (wrapOneR r1)
 
 
 -- S4System
 
-s4SystemT :: (MonadThrow m) 
+s4SystemT :: (ExtendPath c String, MonadThrow m) 
     => Transform c m S4Subsystem a1 
-    -> (String -> String -> String -> Attributes -> [a1] -> b) 
+    -> (String -> String -> Attributes -> [a1] -> b) 
     -> Transform c m S4System b
 s4SystemT t f = transform $ \c -> \case
-    S4System floc code name attrs kids -> 
-        f floc code name attrs <$> mapM (\x -> applyT t c x) kids    
+    S4System floc name attrs kids -> 
+        f floc name attrs <$> mapM (\x -> applyT t (c @@ floc) x) kids    
 
-s4SystemAllR :: (MonadThrow m) 
+s4SystemAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4Subsystem -> Rewrite c m S4System
 s4SystemAllR r1 = s4SystemT r1 S4System
 
-s4SystemAnyR :: (MonadCatch m) 
+s4SystemAnyR :: (ExtendPath c String, MonadCatch m) 
     => Rewrite c m S4Subsystem -> Rewrite c m S4System
 s4SystemAnyR r1 = unwrapAnyR $ s4SystemAllR (wrapAnyR r1) 
 
-s4SystemOneR :: (MonadCatch m) 
+s4SystemOneR :: (ExtendPath c String, MonadCatch m) 
     => Rewrite c m S4Subsystem -> Rewrite c m S4System
 s4SystemOneR r1 = unwrapOneR $ s4SystemAllR (wrapOneR r1)
 
 -- S4Subsystem
 
-s4SubsystemT :: (MonadThrow m) 
+s4SubsystemT :: (ExtendPath c String, MonadThrow m) 
     => Transform c m S4MainItem a1 
-    -> (String -> String -> String -> Attributes -> [a1] -> b) 
+    -> (String -> String -> Attributes -> [a1] -> b) 
     -> Transform c m S4Subsystem b
 s4SubsystemT t f = transform $ \c -> \case
-    S4Subsystem floc code name attrs kids -> 
-        f floc code name attrs <$> mapM (\x -> applyT t c x) kids    
+    S4Subsystem floc name attrs kids -> 
+        f floc name attrs <$> mapM (\x -> applyT t (c @@ floc) x) kids    
 
-s4SubsystemAllR :: (MonadThrow m) 
+s4SubsystemAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4MainItem -> Rewrite c m S4Subsystem
 s4SubsystemAllR r1 = s4SubsystemT r1 S4Subsystem
 
-s4SubsystemAnyR :: (MonadCatch m) 
+s4SubsystemAnyR :: (ExtendPath c String, MonadCatch m) 
     => Rewrite c m S4MainItem -> Rewrite c m S4Subsystem
 s4SubsystemAnyR r1 = unwrapAnyR $ s4SubsystemAllR (wrapAnyR r1) 
 
-s4SubsystemOneR :: (MonadCatch m) 
+s4SubsystemOneR :: (ExtendPath c String, MonadCatch m) 
     => Rewrite c m S4MainItem -> Rewrite c m S4Subsystem
 s4SubsystemOneR r1 = unwrapOneR $ s4SubsystemAllR (wrapOneR r1)
 
 
 -- S4MainItem
 
-s4MainItemT :: (MonadThrow m) 
+s4MainItemT :: (ExtendPath c String, MonadThrow m) 
     => Transform c m S4Component a1 
-    -> (String -> String -> String -> Attributes -> [a1] -> b) 
+    -> (String -> String -> Attributes -> [a1] -> b) 
     -> Transform c m S4MainItem b
 s4MainItemT t f = transform $ \c -> \case
-    S4MainItem floc code name attrs kids -> 
-        f floc code name attrs <$> mapM (\x -> applyT t c x) kids    
+    S4MainItem floc name attrs kids -> 
+        f floc name attrs <$> mapM (\x -> applyT t c x) kids    
 
-s4MainItemAllR :: (MonadThrow m) 
+s4MainItemAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4Component -> Rewrite c m S4MainItem
 s4MainItemAllR r1 = s4MainItemT r1 S4MainItem
 
-s4MainItemAnyR :: (MonadCatch m) 
+s4MainItemAnyR :: (ExtendPath c String, MonadCatch m) 
     => Rewrite c m S4Component -> Rewrite c m S4MainItem
 s4MainItemAnyR r1 = unwrapAnyR $ s4MainItemAllR (wrapAnyR r1) 
 
-s4MainItemOneR :: (MonadCatch m) 
+s4MainItemOneR :: (ExtendPath c String, MonadCatch m) 
     => Rewrite c m S4Component -> Rewrite c m S4MainItem
 s4MainItemOneR r1 = unwrapOneR $ s4MainItemAllR (wrapOneR r1)
 
