@@ -67,7 +67,6 @@ module Assets.S4Universe
 
   ) where
 
-import Debug.Trace
 
 import Language.KURE                    -- package: kure
 
@@ -148,6 +147,12 @@ instance Injection S4Component SUniverse where
 -------------------------------------------------------------------------------
 -- KURE congruence combinators
 
+-- 07/06/2019
+-- Note Congruence combinators need a lot of care for relabelling 
+-- the tree with paths.
+-- We are seeing the extension of the path when the kids see them
+-- (all kids for alltdR etc.) but the "node" does not see the
+-- extension of the path.
 
 -- S4Site
 
@@ -158,8 +163,7 @@ s4SiteT :: (ExtendPath c String, MonadThrow m)
 s4SiteT t f = transform $ \c -> \case
     S4Site floc name attrs kids -> 
         let c1 = c @@ floc in
-        trace ("s4SiteT: " ++ floc ++ ", " ++ name) $
-            f floc name attrs <$> mapM (\x -> applyT t c1 x) kids    
+        f floc name attrs <$> mapM (\x -> applyT t c1 x) kids    
 
 s4SiteAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4Function -> Rewrite c m S4Site
@@ -182,8 +186,7 @@ s4FunctionT :: (ExtendPath c String, MonadThrow m)
 s4FunctionT t f = transform $ \c -> \case
     S4Function floc name attrs kids ->
         let c1 = c @@ floc in
-        trace ("s4FunctionT: " ++ floc ++ ", " ++ name) $
-            f floc name attrs <$> mapM (\x -> applyT t c1 x) kids    
+        f floc name attrs <$> mapM (\x -> applyT t c1 x) kids    
 
 s4FunctionAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4ProcessGroup -> Rewrite c m S4Function
@@ -207,8 +210,7 @@ s4ProcessGroupT :: (ExtendPath c String, MonadThrow m)
 s4ProcessGroupT t f = transform $ \c -> \case
     S4ProcessGroup floc name attrs kids -> 
         let c1 = c @@ floc in
-        trace ("s4ProcessGroupT: " ++ floc ++ ", " ++ name) $
-            f floc name attrs <$> mapM (\x -> applyT t c1 x) kids    
+        f floc name attrs <$> mapM (\x -> applyT t c1 x) kids    
 
 s4ProcessGroupAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4Process -> Rewrite c m S4ProcessGroup

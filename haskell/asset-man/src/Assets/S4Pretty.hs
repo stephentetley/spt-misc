@@ -28,11 +28,13 @@ import Language.KURE                    -- package: KURE
 import Assets.S4Types
 import Assets.S4Universe
 
+import Assets.FlocPath
+
 nodeLabel :: String -> String -> String -> String
 nodeLabel name code typ = name ++ " (" ++ code ++ ") : " ++ typ
 
 
-type TransformPretty a b = Transform IgnorePath KureM a b
+type TransformPretty a b = Transform FlocPath KureM a b
 
 
 applyTransform :: TransformPretty a b -> a -> Either String b
