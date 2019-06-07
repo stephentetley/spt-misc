@@ -28,6 +28,7 @@ import Language.KURE                    -- package: KURE
 
 
 import Assets.Common
+import Assets.FlocLabelling
 import Assets.FlocPath
 import Assets.AibTypes
 import Assets.AibPretty
@@ -96,6 +97,7 @@ testFloc2 procGroup = do
     print $ runTranslateM env displayException $ do
         getProcessGroupFlocInfo "STW" procGroup
 
+demo03 :: IO ()
 demo03 = 
     mapM_ testFloc2 $
         [ "CHEMICAL SERVICES"

@@ -63,8 +63,11 @@ module Assets.S4Universe
   , s4MainItemAnyR
   , s4MainItemOneR
   
+  , IgnorePath
+
   ) where
 
+import Data.Semigroup
 
 import Language.KURE                    -- package: kure
 
@@ -148,23 +151,23 @@ instance Injection S4Component SUniverse where
 
 -- S4Site
 
-s4SiteT :: (MonadThrow m) 
+s4SiteT :: (ExtendPath c String, MonadThrow m) 
     => Transform c m S4Function a1 
     -> (String -> String -> Attributes -> [a1] -> b) 
     -> Transform c m S4Site b
 s4SiteT t f = transform $ \c -> \case
     S4Site code name attrs kids -> 
-        f code name attrs <$> mapM (\x -> applyT t c x) kids    
+        f code name attrs <$> mapM (\x -> applyT t (c @@ code) x) kids    
 
-s4SiteAllR :: (MonadThrow m) 
+s4SiteAllR :: (ExtendPath c String, MonadThrow m) 
     => Rewrite c m S4Function -> Rewrite c m S4Site
 s4SiteAllR r1 = s4SiteT r1 S4Site
 
-s4SiteAnyR :: (MonadCatch m) 
+s4SiteAnyR :: (ExtendPath c String, MonadCatch m) 
     => Rewrite c m S4Function -> Rewrite c m S4Site
 s4SiteAnyR r1 = unwrapAnyR $ s4SiteAllR (wrapAnyR r1) 
 
-s4SiteOneR :: (MonadCatch m) 
+s4SiteOneR :: (ExtendPath c String, MonadCatch m) 
     => Rewrite c m S4Function -> Rewrite c m S4Site
 s4SiteOneR r1 = unwrapOneR $ s4SiteAllR (wrapOneR r1) 
 
@@ -306,7 +309,7 @@ s4MainItemOneR r1 = unwrapOneR $ s4MainItemAllR (wrapOneR r1)
 -------------------------------------------------------------------------------
 -- KURE walker
 
-instance Walker c SUniverse where
+instance ExtendPath c String => Walker c SUniverse where
     allR :: MonadCatch m => Rewrite c m SUniverse -> Rewrite c m SUniverse
     allR r = 
             modExc (stackStrategyFailure "allR") $
@@ -330,4 +333,13 @@ instance Walker c SUniverse where
 
 
 
-       
+data IgnorePath = IgnorePath
+
+instance Semigroup IgnorePath where
+    (<>) a _ = a
+
+instance Monoid IgnorePath where
+    mempty = IgnorePath    
+    
+instance ExtendPath IgnorePath String where
+    (@@) _ _ = IgnorePath    

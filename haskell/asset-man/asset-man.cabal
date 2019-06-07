@@ -35,12 +35,13 @@ library
     Assets.AibUniverse,
     Assets.AibPretty,
     Assets.Common, 
+    Assets.FlocLabelling,
     Assets.FlocPath,
     Assets.InstallationToSite,
     Assets.S4Types,
     Assets.S4Universe,
     Assets.S4Pretty,
-    Assets.TranslationRules,
+    Assets.TranslationTables,
     Assets.TranslateMonad
     
 

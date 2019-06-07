@@ -32,11 +32,11 @@ nodeLabel :: String -> String -> String -> String
 nodeLabel name code typ = name ++ " (" ++ code ++ ") : " ++ typ
 
 
-type TransformE a b = Transform () KureM a b
+type TransformE a b = Transform IgnorePath KureM a b
 
 
 applyTransform :: TransformE a b -> a -> Either String b
-applyTransform t = runKureM Right (Left . showKureExc) . applyT t ()
+applyTransform t = runKureM Right (Left . showKureExc) . applyT t mempty
 
 
 
