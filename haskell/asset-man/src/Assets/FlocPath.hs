@@ -30,7 +30,8 @@ module Assets.FlocPath
 import Language.KURE.Path               -- package: kure
 
 import Data.List
-import Data.Monoid
+
+
 
 newtype FlocPath = FlocPath { getFlocPath :: SnocPath String }
     deriving (Eq, Show)

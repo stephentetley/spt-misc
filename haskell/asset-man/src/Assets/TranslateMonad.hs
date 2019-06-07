@@ -44,7 +44,7 @@ import Control.Monad.Reader.Class
 import Language.KURE.MonadCatch         -- package: KURE
 
 import Assets.Common
-import Assets.TranslationRules
+import Assets.TranslationTables
 
 -- NOTE
 -- Monad.Fail seems unpleasantly flaky with my GHC (8.4.2)

@@ -32,7 +32,7 @@ import Language.KURE                    -- package: KURE
 
 import Assets.TranslateMonad
 import Assets.Common
-import Assets.TranslationRules
+import Assets.TranslationTables
 import Assets.AibTypes
 import Assets.AibUniverse
 import qualified Assets.S4Types as S4
@@ -145,7 +145,7 @@ process = withPatFailExc (strategyFailure "AibProcess") $ do
     let procName = process_name proc
     (_, _, procCode) <- liftTranslate $ getProcessFlocInfo siteType groupName procName
     procDescr <- liftTranslate $ level4ProcessDescription procCode 
-    let tempName = "{ s4:'" ++ procDescr ++ "', aib:'" ++ procName ++ "'}"
+    let tempName = if procDescr == "" then "{ aib:'" ++ procName ++ "' }" else procDescr
     return $ S4.S4Process
                 { S4.process_floc_code          = ""
                 , S4.process_code               = procCode

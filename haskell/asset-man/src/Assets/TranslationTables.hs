@@ -3,7 +3,7 @@
 
 --------------------------------------------------------------------------------
 -- |
--- Module      :  Assets.TranslationRules
+-- Module      :  Assets.TranslationTables
 -- Copyright   :  (c) Stephen Tetley 2019
 -- License     :  to be determined
 --
@@ -18,7 +18,7 @@
 --------------------------------------------------------------------------------
 
 
-module Assets.TranslationRules 
+module Assets.TranslationTables
     (
         SaiNumber
     ,   SiteFlocMapping
