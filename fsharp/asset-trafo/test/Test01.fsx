@@ -13,9 +13,10 @@ open FSharp.Data
 #I @"C:\Users\stephen\.nuget\packages\slformat\1.0.2-alpha-20190616\lib\netstandard2.0"
 #r "SLFormat.dll"
 
+#load "..\src\AssetTrafo\Base\SFResult.fs"
 #load "..\src\AssetTrafo\Base\Attributes.fs"
-#load "..\src\AssetTrafo\Aib\AibUnitype.fs"
-#load "..\src\AssetTrafo\Aib\AibTypes.fs"
+#load "..\src\AssetTrafo\Aib\Unitype.fs"
+#load "..\src\AssetTrafo\Aib\Syntax.fs"
 #load "..\src\AssetTrafo\S4\S4Types.fs"
 
 open AssetTrafo.Base

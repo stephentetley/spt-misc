@@ -150,7 +150,7 @@ module Syntax =
 
     let siteToJson (site:AibInstallation) (outputPath:string) : unit = 
         let simple = toAibNode site
-        let json = toJsonValue simple
+        let json = simple.ToJsonValue ()
         use sw = new StreamWriter (path = outputPath)
         json.WriteTo(sw, JsonSaveOptions.None)
 

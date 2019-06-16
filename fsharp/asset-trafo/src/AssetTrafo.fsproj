@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="AssetTrafo\Base\SFResult.fs" />
     <Compile Include="AssetTrafo\Base\Attributes.fs" />
     <Compile Include="AssetTrafo\Aib\Unitype.fs" />
     <Compile Include="AssetTrafo\Aib\Syntax.fs" />
