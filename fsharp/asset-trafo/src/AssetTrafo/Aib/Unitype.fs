@@ -12,7 +12,7 @@ module Unitype =
 
     open SLFormat.RoseTree
 
-    open AssetTrafo.Base.SFResult
+    open AssetTrafo.Base.JsonWriter
     open AssetTrafo.Base.Attributes
 
     let private getField (key:string) 

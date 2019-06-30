@@ -10,7 +10,7 @@ module Syntax =
     open FSharp.Data
 
     open AssetTrafo.Base.Attributes
-    open AssetTrafo.Aib.Unitype
+    open AssetTrafo.Base.JsonReader
     
     type AibUnknown =
         { Uid : string
@@ -76,85 +76,24 @@ module Syntax =
           Kids : AibInstallationKid list
         }
 
+    let internal readAibInstallation : JsonReader<AibInstallation> = 
+        readRecord 
+            <| jsonRecord { 
+                    let! uid = readField "assetReference" readString
+                    let! name = readField "name" readString
+                    let! attrs = readField "attributes" <| Attributes.ReadJson ()
+                    return { Uid = uid
+                             Name = name
+                             Attributes = attrs
+                             Kids = []
+                        }
+                }
 
+    let readAibInstallationJson (inpath : string) : Result<AibInstallation, ErrMsg> = 
+        try
+            use source = new StreamReader(path = inpath)
+            JsonValue.Load(source) |> runJsonReader readAibInstallation 
+        with
+        | _ -> Error "Could not read input"
 
-    let private makeAibNode (uid : string) (name : string) (typeName : string) (attrs : Attributes) (kids : AibNode list) : AibNode = 
-        { Uid = uid
-          NodeName = name
-          NodeType = typeName
-          Attributes = attrs 
-          Kids = kids
-        }
-
-
-    let private kidsToAibNode (kids : 'item list) 
-                              (dispatch : 'item -> (AibNode -> AibNode) -> AibNode)
-                              (cont : AibNode list -> AibNode) : AibNode = 
-        let rec work (xs : 'item list) (kont : AibNode list -> AibNode) = 
-            match xs with
-            | [] -> kont []
-            | a1 :: rest -> 
-                dispatch a1 (fun v1 -> 
-                work rest (fun ac -> 
-                kont (v1 :: ac)))
-        work kids cont
-
-
-    let private unknownToAibNode (source : AibUnknown) (cont : AibNode -> AibNode) : AibNode = 
-        cont (makeAibNode source.Uid source.Name "Unknown" source.Attributes [])
-
-    let private equipmentToAibNode (source : AibEquipment) (cont : AibNode -> AibNode) : AibNode = 
-        cont (makeAibNode source.Uid source.Name "Eqipment" source.Attributes [])
-
-
-    let private plantItemToAibNode (source : AibPlantItem) (cont : AibNode -> AibNode) : AibNode = 
-        let matcher x = equipmentToAibNode x
-        kidsToAibNode source.Kids matcher (fun kids -> 
-        cont (makeAibNode source.Uid source.Name "PlantItem" source.Attributes kids))
-
-    let private plantAssemblyToAibNode (source : AibPlantAssembly) (cont : AibNode -> AibNode) : AibNode = 
-        let matcher x = 
-            match x with 
-            | AibPlantAssemblyKidPlantItem p -> plantItemToAibNode p
-            | AibPlantAssemblyKidEquipment p -> equipmentToAibNode p
-            | AibPlantAssemblyKidUnknown p -> unknownToAibNode p
-        kidsToAibNode source.Kids matcher (fun kids -> 
-        cont (makeAibNode source.Uid source.Name "PlantAssembly" source.Attributes kids))
-        
-    let private processToAibNode (source : AibProcess) (cont : AibNode -> AibNode) : AibNode = 
-        let matcher x = 
-            match x with 
-            | AibProcessKidPlantAssembly p -> plantAssemblyToAibNode p
-            | AibProcessKidPlantItem p -> plantItemToAibNode p
-        kidsToAibNode source.Kids matcher (fun kids -> 
-        cont (makeAibNode source.Uid source.Name "Process" source.Attributes kids))
-
-    let private processGroupToAibNode (source : AibProcessGroup) (cont : AibNode -> AibNode) : AibNode = 
-        let matcher x = 
-            match x with 
-            | AibProcessGroupKidProcess p -> processToAibNode p
-        kidsToAibNode source.Kids matcher (fun kids -> 
-        cont (makeAibNode source.Uid source.Name "ProcessGroup" source.Attributes kids))
-    
-    let private installationToAibNode (source : AibInstallation) (cont : AibNode -> AibNode) : AibNode = 
-        let matcher x = 
-            match x with 
-            | AibInstallationKidProcessGroup p -> processGroupToAibNode p
-            | AibInstallationKidProcess p -> processToAibNode p
-        kidsToAibNode source.Kids matcher (fun kids -> 
-        cont (makeAibNode source.Uid source.Name "Installation" source.Attributes kids))
-
-
-    let toAibNode (site : AibInstallation) : AibNode = 
-        installationToAibNode site id
-
-    let siteToJson (site:AibInstallation) (outputPath:string) : unit = 
-        let simple = toAibNode site
-        let json = simple.ToJsonValue ()
-        use sw = new StreamWriter (path = outputPath)
-        json.WriteTo(sw, JsonSaveOptions.None)
-
-
-    let printSite (site:AibInstallation) : unit = 
-        toAibNode site |> drawTree (fun node -> node.NodeName)
         

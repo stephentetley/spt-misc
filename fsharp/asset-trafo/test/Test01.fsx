@@ -13,12 +13,13 @@ open FSharp.Data
 #I @"C:\Users\stephen\.nuget\packages\slformat\1.0.2-alpha-20190616\lib\netstandard2.0"
 #r "SLFormat.dll"
 
-#load "..\src\AssetTrafo\Base\SFResult.fs"
+#load "..\src\AssetTrafo\Base\JsonReader.fs"
 #load "..\src\AssetTrafo\Base\Attributes.fs"
-#load "..\src\AssetTrafo\Aib\Unitype.fs"
 #load "..\src\AssetTrafo\Aib\Syntax.fs"
 #load "..\src\AssetTrafo\S4\S4Types.fs"
 
 open AssetTrafo.Base
-open AssetTrafo.S4Types
+open AssetTrafo.Aib.Syntax
 
+let demo01 () = 
+    readAibInstallationJson @"E:\coding\fsharp\asset-trafo\demo\aib_ald.json"
